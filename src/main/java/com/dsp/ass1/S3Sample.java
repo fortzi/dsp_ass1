@@ -51,7 +51,6 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
  * users) before you try to run this sample.
  */
 public class S3Sample {
-
     public static void main(String[] args) throws IOException {
         /*
          * Create your credentials file at ~/.aws/credentials (C:\Users\USER_NAME\.aws\credentials for Windows users) 
