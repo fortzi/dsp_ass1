@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/aws-java-sample.iml" filepath="$PROJECT_DIR$/aws-java-sample.iml" />
+      <module fileurl="file://$PROJECT_DIR$/dsp-ass1.iml" filepath="$PROJECT_DIR$/dsp-ass1.iml" />
     </modules>
   </component>
 </project>
