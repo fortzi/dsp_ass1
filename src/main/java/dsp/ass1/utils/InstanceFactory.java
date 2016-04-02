@@ -30,59 +30,56 @@ public class InstanceFactory {
     final int MAXIMUM_INSTANCES         = 20;
 
     static int runningInstances = 0;
-    Lock makeInstancesLock = null;
     String jarFileName = null;
 
     protected InstanceFactory(String jarFileName) {
         this.jarFileName = jarFileName;
-        this.makeInstancesLock = new ReentrantLock();
     }
 
     /**
-     * Preping EC2 instance and running specified jarFile
-     * @param count How many instances to create. It is not advised to
-     * @throws IOException
+     * Preping EC2 instance and running specified jarFile.
+     * @param count
+     *          How many instances to create.
+     *          It is not advised to create too many at once.
      */
-    public void makeInstances(int count) {
-        RunInstancesResult runInstancesResult = null;
-        AmazonEC2Client amazonEC2Client = null;
+    public synchronized void makeInstances(int count) {
+        int newInstancesCount = Math.min(count, MAXIMUM_INSTANCES - runningInstances);
+        if (newInstancesCount == 0) {
+            return;
+        }
 
-        makeInstancesLock.lock();
-        try {
-            int newInstancesCount = Math.min(count, MAXIMUM_INSTANCES - runningInstances);
-            Region instanceRegion = Region.getRegion(Regions.US_EAST_1);
-            amazonEC2Client = new AmazonEC2Client();
-            amazonEC2Client.setRegion(instanceRegion);
+        AmazonEC2Client amazonEC2Client = new AmazonEC2Client();
+        amazonEC2Client.setRegion(Constants.REGION);
 
-            RunInstancesRequest runInstancesRequest = new RunInstancesRequest();
-            runInstancesRequest.setInstanceInitiatedShutdownBehavior(ShutdownBehavior.Terminate);
-            runInstancesRequest
-                    .withImageId(GENERIC_IMAGE_AMI_ID)
-                    .withInstanceType(INSTANCE_TYPE)
-                    .withMinCount(Math.min(1, newInstancesCount))
-                    .withMaxCount(newInstancesCount)
-                    .withKeyName(KEY_NAME)
-                    .withSecurityGroups(SECURITY_GROUP)
-                    .setUserData(getUserData(jarFileName));
+        RunInstancesRequest runInstancesRequest = new RunInstancesRequest();
+        runInstancesRequest.setInstanceInitiatedShutdownBehavior(ShutdownBehavior.Terminate);
+        runInstancesRequest
+                .withImageId(GENERIC_IMAGE_AMI_ID)
+                .withInstanceType(INSTANCE_TYPE)
+                .withMinCount(Math.min(1, newInstancesCount))
+                .withMaxCount(newInstancesCount)
+                .withKeyName(KEY_NAME)
+                .withSecurityGroups(SECURITY_GROUP)
+                .setUserData(getUserData(jarFileName));
 
-            runInstancesResult = amazonEC2Client.runInstances(runInstancesRequest);
-            runningInstances += newInstancesCount;
+        RunInstancesResult runInstancesResult = amazonEC2Client.runInstances(runInstancesRequest);
+        runningInstances += newInstancesCount;
 
-            // Adding Tags
-            List<Instance> instances = runInstancesResult.getReservation().getInstances();
+        // Adding Tags
+        List<Instance> instances = runInstancesResult.getReservation().getInstances();
 
-            for (Instance instance : instances) {
-                CreateTagsRequest createTagsRequest = new CreateTagsRequest();
-                createTagsRequest.withResources(instance.getInstanceId())
-                        .withTags(new Tag("Type", jarFileName));
-                amazonEC2Client.createTags(createTagsRequest);
-            }
-        } finally {
-            makeInstancesLock.unlock();
+        for (Instance instance : instances) {
+            CreateTagsRequest createTagsRequest = new CreateTagsRequest();
+            createTagsRequest.withResources(instance.getInstanceId())
+                    .withTags(new Tag("Type", jarFileName));
+            amazonEC2Client.createTags(createTagsRequest);
         }
     }
 
-    public void makeInstance() throws IOException {
+    /**
+     * Preping EC2 instance and running specified jarFile.
+     */
+    public void makeInstance() {
         makeInstances(1);
     }
 
