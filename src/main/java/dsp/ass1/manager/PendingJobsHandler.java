@@ -1,5 +1,7 @@
 package dsp.ass1.manager;
 
+import java.util.ArrayList;
+
 /**
  * Created by user1 on 04/02/2016.
  * Get jobs links from SQS
@@ -14,6 +16,9 @@ package dsp.ass1.manager;
  */
 public class PendingJobsHandler implements Runnable {
     public void run() {
+        while (true) {
+            // Get Jobs
 
+        }
     }
 }
