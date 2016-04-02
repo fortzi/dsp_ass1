@@ -6,13 +6,12 @@ import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ec2.AmazonEC2Client;
-import com.amazonaws.services.ec2.model.RunInstancesRequest;
-import com.amazonaws.services.ec2.model.RunInstancesResult;
-import com.amazonaws.services.ec2.model.ShutdownBehavior;
+import com.amazonaws.services.ec2.model.*;
 import org.apache.commons.codec.binary.Base64;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.List;
 
 /**
  * Created by Ofer on 03/30/2016.
@@ -51,6 +50,17 @@ public class InstanceFactory {
                 .setUserData(getUserData(jarFileName));
 
         RunInstancesResult runInstancesResult = amazonEC2Client.runInstances(runInstancesRequest);
+
+
+        // Adding Tags
+        List<Instance> instances = runInstancesResult.getReservation().getInstances();
+
+        for (Instance instance : instances) {
+            CreateTagsRequest createTagsRequest = new CreateTagsRequest();
+            createTagsRequest.withResources(instance.getInstanceId())
+                    .withTags(new Tag("Type", jarFileName));
+            amazonEC2Client.createTags(createTagsRequest);
+        }
     }
 
     // returning user data in BASE64 format
