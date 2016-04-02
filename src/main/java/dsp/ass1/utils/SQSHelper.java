@@ -48,9 +48,6 @@ public class SQSHelper {
 
         GetQueueAttributesResult attributesResult = sqs.getQueueAttributes(attributesRequest);
 
-        if(!attributesResult.getAttributes().containsKey("ApproximateNumberOfMessages"))
-            throw new Exception("GetQueueAttributesResult does not contains ApproximateNumberOfMessages");
-
         return Integer.parseInt(attributesResult.getAttributes().get("ApproximateNumberOfMessages"));
     }
 
@@ -68,7 +65,7 @@ public class SQSHelper {
 
         do {
             messages = sqs.receiveMessage(receiveRequest).getMessages();
-        } while(messages.size() == 0 && wait == true);
+        } while(messages.size() == 0 && wait);
 
         if(messages.size() == 0)
             return null;
@@ -76,21 +73,28 @@ public class SQSHelper {
             return messages.get(0);
     }
 
-    public void test(Queues queue, String tag) {
+    /**
+     * finds message in a given queue with the given id as attribute
+     * this function is blocking
+     * @param queue the queue to search in
+     * @param id the attribute to filter message by
+     * @return message that was found
+     */
+    public Message getMsgFromQueue(Queues queue, String id) {
 
         List<Message> messages;
         String queueUrl = sqs.getQueueUrl(queue.toString()).getQueueUrl();
 
         ReceiveMessageRequest receiveRequest = new ReceiveMessageRequest(queueUrl);
 
-        receiveRequest.withMaxNumberOfMessages(10);
-        receiveRequest.withMessageAttributeNames(tag);
+        receiveRequest.withMaxNumberOfMessages(1);
+        receiveRequest.withMessageAttributeNames(id);
 
         do {
             messages = sqs.receiveMessage(receiveRequest).getMessages();
         } while(messages.size() == 0);
 
-        System.out.println(tag + ": " + messages.size());
+       return messages.get(0);
     }
 
 

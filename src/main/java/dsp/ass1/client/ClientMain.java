@@ -52,7 +52,6 @@ public class ClientMain {
 
         System.out.println("my id: " + myId);
 
-        new SQSHelper().test(SQSHelper.Queues.FINISHED_TWEETS,"kaki");
 
 
 
