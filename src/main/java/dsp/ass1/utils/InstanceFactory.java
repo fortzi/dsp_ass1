@@ -1,4 +1,4 @@
-package dsp.ass1.manager;
+package dsp.ass1.utils;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.auth.AWSCredentials;

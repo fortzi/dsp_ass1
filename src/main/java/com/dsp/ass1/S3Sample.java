@@ -37,6 +37,7 @@ import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.amazonaws.services.sqs.model.CreateQueueRequest;
 
 /**
  * This sample demonstrates how to make basic requests to Amazon S3 using
@@ -166,6 +167,9 @@ public class S3Sample {
                     + "a serious internal problem while trying to communicate with S3, "
                     + "such as not being able to access the network.");
             System.out.println("Error Message: " + ace.getMessage());
+
+
+
         }
     }
 
