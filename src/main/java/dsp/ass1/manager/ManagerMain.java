@@ -8,8 +8,6 @@ import java.io.IOException;
 import java.util.Dictionary;
 
 public class ManagerMain {
-    Dictionary<string, TwitterAnalysisJob> jobs = null;
-
     public static void main(String[] args) throws IOException {
         /*
 

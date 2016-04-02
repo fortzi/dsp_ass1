@@ -3,6 +3,8 @@ package dsp.ass1.utils;
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
+import com.amazonaws.regions.Region;
+import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ec2.model.RunInstancesRequest;
 import com.amazonaws.services.ec2.model.RunInstancesResult;
@@ -33,8 +35,9 @@ public class InstanceFactory {
 
     //preping EC2 instance and running specified jarFile
     public void makeInstance() throws IOException {
+        Region instanceRegion = Region.getRegion(Regions.US_EAST_1);
         AmazonEC2Client amazonEC2Client = new AmazonEC2Client(credentials);
-        amazonEC2Client.setEndpoint("ec2.us-east-1.amazonaws.com");
+        amazonEC2Client.setRegion(instanceRegion);
 
         RunInstancesRequest runInstancesRequest = new RunInstancesRequest();
         runInstancesRequest.setInstanceInitiatedShutdownBehavior(ShutdownBehavior.Terminate);
