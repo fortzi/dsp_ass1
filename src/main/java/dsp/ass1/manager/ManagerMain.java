@@ -25,6 +25,6 @@ public class ManagerMain {
 
     public void print() {
 
-        System.out.println("kaki");
+        System.out.println("pipi");
     }
 }
