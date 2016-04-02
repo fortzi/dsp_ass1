@@ -45,7 +45,13 @@ public class PendingJobsHandler implements Runnable {
             }
 
             String jobObjectKey = jobMessage.getBody().toString();
-            String rawJob = s3.getObject(jobObjectKey);
+            String rawJob = null;
+            try {
+                rawJob = S3Helper.getStringFromInputStream(s3.getObject(jobObjectKey).getObjectContent());
+            } catch (IOException e) {
+                e.printStackTrace();
+                continue;
+            }
             Job job = null;
 
             try {
