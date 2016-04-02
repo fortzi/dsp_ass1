@@ -1,11 +1,13 @@
 package dsp.ass1.manager;
 
+import com.amazonaws.services.sqs.model.Message;
+import dsp.ass1.utils.Constants;
 import dsp.ass1.utils.S3Helper;
+import dsp.ass1.utils.SQSHelper;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Map;
 
 /**
  * Created by user1 on 04/02/2016.
@@ -22,40 +24,46 @@ import java.util.Arrays;
  */
 public class PendingJobsHandler implements Runnable {
     S3Helper s3;
-    String jobURL;
-    ArrayList<Job> allJobs;
-    ArrayList<Job> tweets;
-    boolean kill;
+    SQSHelper sqs;
+    Map<String, Job> allJobs;
+    int workerCount = 0;
 
-    public PendingJobsHandler() {
+    public PendingJobsHandler(Map<String, Job> allJobs) {
         this.s3 = new S3Helper();
-        this.jobURL = null;
-        this.allJobs = null;
-        this.tweets = null;
-        this.kill = false;
+        this.sqs = new SQSHelper();
+        this.allJobs = allJobs;
     }
 
     public void run() {
-        while (!kill) {
-            // Get Jobs
-            jobURL = "https://s3.amazonaws.com/dsp-ass1/pending-jobs/tweetLinks.txt";
-
-            for (String rawJob : s3.getAllObjects(S3Helper.Folders.PENDING_JOBS)) {
-                Job job = null;
-                try {
-                    job = new Job(rawJob.split("\n"));
-                } catch (IOException e) {
-                    System.err.println("Error parsing job at: " + jobURL);
-                    continue;
-                }
-                allJobs.add(job);
-
-                try {
-                    Thread.sleep(5000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+        while (true) {
+            Message jobMessage = sqs.getMsgFromQueue(SQSHelper.Queues.PENDING_JOBS);
+            if (jobMessage.getAttributes().containsKey(Constants.TERMINATION_MESSAGE)) {
+                break;
             }
+
+            String jobObjectKey = jobMessage.getBody().toString();
+            String rawJob = s3.getObject(jobObjectKey);
+            Job job = null;
+
+            try {
+                job = new Job(rawJob.split("\n"));
+            } catch (IOException e) {
+                System.err.println("Error parsing job at: " + jobObjectKey);
+                continue;
+            }
+
+            allJobs.put(jobObjectKey, job);
+            // Send SQS Messages
+            for (String tweetURL : job.getUrls()) {
+                sqs.sendMsgToQueue(SQSHelper.Queues.PENDING_TWEETS, tweetURL);
+            }
+
+            int messageCount = sqs.getMsgCount(SQSHelper.Queues.PENDING_TWEETS);
+            if (messageCount / workerCount > Constants.TWEETS_PER_WORKER) {
+
+            }
+
+            sqs.removeMsgFromQueue(SQSHelper.Queues.PENDING_JOBS, jobMessage);
         }
     }
 }

@@ -14,7 +14,6 @@ import java.util.Map;
  */
 public class Job {
     String[] urls;
-//    File results;
     PrintWriter results;
     int remainingUrls;
 
@@ -25,21 +24,19 @@ public class Job {
         this.results = new PrintWriter(new BufferedWriter(new FileWriter(file.getPath(), true)));
     }
 
-    public int addResult(String tweetContent, int sentiment, Map<String, String> entities) {
+    public int addResult(String tweetContent, int sentiment, Map<String, String> entities) throws JSONException {
         JSONObject result = new JSONObject();
 
-        try {
-            result.put("content", tweetContent);
-            result.put("sentiment", sentiment);
-            result.put("entities", new JSONObject(entities));
-        } catch (JSONException e) {
-            // Only happens when the key is null
-            System.err.println(e.getMessage());
-            return remainingUrls;
-        }
+        result.put("content", tweetContent);
+        result.put("sentiment", sentiment);
+        result.put("entities", new JSONObject(entities));
 
         results.println(result.toString());
         return --remainingUrls;
+    }
+
+    public boolean isComplete() {
+        return remainingUrls == 0;
     }
 
     public String getUrlAt(int i) {

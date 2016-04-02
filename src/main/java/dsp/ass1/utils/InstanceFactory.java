@@ -7,11 +7,15 @@ import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ec2.model.*;
+import com.sun.xml.internal.bind.v2.runtime.reflect.opt.Const;
+import com.sun.xml.internal.ws.runtime.config.ObjectFactory;
 import org.apache.commons.codec.binary.Base64;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Created by Ofer on 03/30/2016.
@@ -23,42 +27,63 @@ public class InstanceFactory {
     final String SECURITY_GROUP         = "launch-wizard-1";
     final String PACKAGE_FILE_NAME      = "package.zip";
     final String S3_ADDRESS             = "https://s3.amazonaws.com/dsp-ass1/" + PACKAGE_FILE_NAME;
+    final int MAXIMUM_INSTANCES         = 20;
 
+    static int runningInstances = 0;
+    Lock makeInstancesLock = null;
     String jarFileName = null;
 
     protected InstanceFactory(String jarFileName) {
         this.jarFileName = jarFileName;
+        this.makeInstancesLock = new ReentrantLock();
     }
 
-    //preping EC2 instance and running specified jarFile
-    public void makeInstance() throws IOException {
-        Region instanceRegion = Region.getRegion(Regions.US_EAST_1);
-        AmazonEC2Client amazonEC2Client = new AmazonEC2Client();
-        amazonEC2Client.setRegion(instanceRegion);
+    /**
+     * Preping EC2 instance and running specified jarFile
+     * @param count How many instances to create. It is not advised to
+     * @throws IOException
+     */
+    public void makeInstances(int count) throws IOException {
+        RunInstancesResult runInstancesResult = null;
+        AmazonEC2Client amazonEC2Client = null;
 
-        RunInstancesRequest runInstancesRequest = new RunInstancesRequest();
-        runInstancesRequest.setInstanceInitiatedShutdownBehavior(ShutdownBehavior.Terminate);
-        runInstancesRequest
-                .withImageId(GENERIC_IMAGE_AMI_ID)
-                .withInstanceType(INSTANCE_TYPE)
-                .withMinCount(1)
-                .withMaxCount(1)
-                .withKeyName(KEY_NAME)
-                .withSecurityGroups(SECURITY_GROUP)
-                .setUserData(getUserData(jarFileName));
+        makeInstancesLock.lock();
+        try {
+            int newInstancesCount = Math.min(count, MAXIMUM_INSTANCES - runningInstances);
+            Region instanceRegion = Region.getRegion(Regions.US_EAST_1);
+            amazonEC2Client = new AmazonEC2Client();
+            amazonEC2Client.setRegion(instanceRegion);
 
-        RunInstancesResult runInstancesResult = amazonEC2Client.runInstances(runInstancesRequest);
+            RunInstancesRequest runInstancesRequest = new RunInstancesRequest();
+            runInstancesRequest.setInstanceInitiatedShutdownBehavior(ShutdownBehavior.Terminate);
+            runInstancesRequest
+                    .withImageId(GENERIC_IMAGE_AMI_ID)
+                    .withInstanceType(INSTANCE_TYPE)
+                    .withMinCount(Math.min(1, newInstancesCount))
+                    .withMaxCount(newInstancesCount)
+                    .withKeyName(KEY_NAME)
+                    .withSecurityGroups(SECURITY_GROUP)
+                    .setUserData(getUserData(jarFileName));
 
+            runInstancesResult = amazonEC2Client.runInstances(runInstancesRequest);
+            runningInstances += newInstancesCount;
 
-        // Adding Tags
-        List<Instance> instances = runInstancesResult.getReservation().getInstances();
+            // Adding Tags
+            List<Instance> instances = runInstancesResult.getReservation().getInstances();
 
-        for (Instance instance : instances) {
-            CreateTagsRequest createTagsRequest = new CreateTagsRequest();
-            createTagsRequest.withResources(instance.getInstanceId())
-                    .withTags(new Tag("Type", jarFileName));
-            amazonEC2Client.createTags(createTagsRequest);
+            for (Instance instance : instances) {
+                CreateTagsRequest createTagsRequest = new CreateTagsRequest();
+                createTagsRequest.withResources(instance.getInstanceId())
+                        .withTags(new Tag("Type", jarFileName));
+                amazonEC2Client.createTags(createTagsRequest);
+            }
+        } finally {
+            makeInstancesLock.unlock();
         }
+    }
+
+    public void makeInstance() throws IOException {
+        makeInstances(1);
     }
 
     // returning user data in BASE64 format
