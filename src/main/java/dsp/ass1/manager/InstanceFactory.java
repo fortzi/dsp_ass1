@@ -23,7 +23,8 @@ public class InstanceFactory {
     final static String PACKAGE_FILE_NAME      = "package.zip";
     final static String S3_ADDRESS             = "https://s3.amazonaws.com/dsp-ass1/" + PACKAGE_FILE_NAME;
 
-    protected void makeInstance(String job) throws IOException {
+    //preping EC2 instance and running specified jarFile
+    protected void makeInstance(String jarFile) throws IOException {
         AWSCredentials credentials = null;
 
         try {
@@ -48,12 +49,13 @@ public class InstanceFactory {
                 .withMaxCount(1)
                 .withKeyName(KEY_NAME)
                 .withSecurityGroups(SECURITY_GROUP)
-                .setUserData(getUserData(job));
+                .setUserData(getUserData(jarFile));
 
         RunInstancesResult runInstancesResult = amazonEC2Client.runInstances(runInstancesRequest);
     }
 
-    private static String getUserData(String job) {
+    // returning user data in BASE64 format
+    private static String getUserData(String jarFile) {
         String base64UserData = null;
         StringBuilder userData = new StringBuilder();
 
@@ -64,7 +66,7 @@ public class InstanceFactory {
         userData.append("unzip -P `cat zipcred.txt` ").append(PACKAGE_FILE_NAME).append("\n");
         userData.append("mkdir ~/.aws").append("\n");
         userData.append("mv ~/ass1/credentials ~/.aws/").append("\n");
-        userData.append("java -jar ~/ass1/jars/").append(job).append(".jar > log.txt").append("\n");
+        userData.append("java -jar ~/ass1/jars/").append(jarFile).append(".jar > log.txt").append("\n");
         userData.append("curl -X POST -d \"`cat log.txt`\" http://requestb.in/18jmtli1").append("\n");
         userData.append("sudo shutdown -h now");
 
