@@ -5,11 +5,10 @@ import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.model.GetObjectRequest;
-import com.amazonaws.services.s3.model.PutObjectRequest;
-import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.*;
 
 import java.io.*;
+import java.util.ArrayList;
 
 /**
  * Created by user1 on 04/02/2016.
@@ -21,9 +20,8 @@ public class S3Helper {
 
     public S3Helper() {
         Region region = Region.getRegion(Regions.US_EAST_1);
-
         s3 = new AmazonS3Client();
-        s3.setRegion(region);
+        //s3.setRegion(region);
     }
 
     /**
@@ -31,21 +29,22 @@ public class S3Helper {
      * @param folder The folder in which to put the file in.
      * @param objectName The key representing the object in S3.
      * @param file The file to put in S3.
+     * @return The URL to the newly uploaded file.
      */
-    public void putObject(Folders folder, String objectName, File file) {
-        String objectKey = folder + "/" + objectName;
-        s3.putObject(new PutObjectRequest(BUCKET_NAME, objectKey, file));
+    public String putObject(Folders folder, String objectName, File file) {
+        String objectKey = folder + "/" + objectName + "_" + file.hashCode();
+        PutObjectResult result = s3.putObject(new PutObjectRequest(BUCKET_NAME, objectKey, file));
+
+        return objectKey;
     }
 
     /**
      * Gets an object from the default bucket.
-     * @param folder The folder in which to put the object.
-     * @param objectName The key representing the object in S3.
+     * @param objectKey The object's key in S3.
      * @return The object's content as a string.
      * @throws AmazonClientException if the result input was unable to be processed
      */
-    public String getObject(Folders folder, String objectName) throws AmazonClientException {
-        String objectKey = folder + "/" + objectName;
+    public String getObject(String objectKey) throws AmazonClientException {
         S3Object object = s3.getObject(new GetObjectRequest(BUCKET_NAME, objectKey));
         String result = "";
 
@@ -56,6 +55,33 @@ public class S3Helper {
         }
 
         return result;
+    }
+
+    /**
+     * Gets an object from the default bucket.
+     * @param folder The folder in which to put the object.
+     * @param objectName The suffix of the object's key in S3.
+     * @return The object's content as a string.
+     * @throws AmazonClientException if the result input was unable to be processed
+     */
+    public String getObject(Folders folder, String objectName) throws AmazonClientException {
+        return getObject(folder + "/" + objectName);
+    }
+
+    public ArrayList<String> getAllObjects(Folders folder) {
+        ArrayList<String> jobs = new ArrayList<String>();
+
+        ListObjectsRequest listObjectRequest = new ListObjectsRequest().
+            withBucketName(BUCKET_NAME).
+            withPrefix(folder.toString()).
+            withDelimiter("/");
+        ObjectListing objectListing = s3.listObjects(listObjectRequest);
+
+        for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries()) {
+            jobs.add(getObject(objectSummary.getKey()));
+        }
+
+        return jobs;
     }
 
     private String getStringFromInputStream(InputStream input) throws IOException {
@@ -76,15 +102,7 @@ public class S3Helper {
      * The available folders in the bucket.
      */
     public static enum Folders {
-        FINISHED_JOBS {
-            public String toString() {
-                return "finished-jobs";
-            }
-        },
-        PENDING_JOBS {
-            public String toString() {
-                return "pending-jobs";
-            }
-        }
+        FINISHED_JOBS   { public String toString() { return "finished-jobs"; } },
+        PENDING_JOBS    { public String toString() { return "pending-jobs"; } }
     }
 }

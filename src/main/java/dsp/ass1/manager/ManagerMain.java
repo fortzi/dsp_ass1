@@ -36,21 +36,21 @@ public class ManagerMain {
                         Finalize local job state
         */
 
-        final TwitterWorkerFactory twitterWorkerFactory = new TwitterWorkerFactory(InstanceFactory.getCredentials());
+//        final TwitterWorkerFactory twitterWorkerFactory = new TwitterWorkerFactory(InstanceFactory.getCredentials());
 
         (new Thread(new PendingJobsHandler())).start();
         (new Thread(new FinishedTweetsHandler())).start();
 
-        new Thread() {
-            public void run() {
-                try {
-                    System.out.println("Creating worker instance");
-                    twitterWorkerFactory.makeInstance();
-                    System.out.println("Created worker instance");
-                } catch (IOException e) {
-                    System.out.println("TwitterWorkerFactory Error: " + e);
-                }
-            }
-        }.start();
+//        new Thread() {
+//            public void run() {
+//                try {
+//                    System.out.println("Creating worker instance");
+//                    twitterWorkerFactory.makeInstance();
+//                    System.out.println("Created worker instance");
+//                } catch (IOException e) {
+//                    System.out.println("TwitterWorkerFactory Error: " + e);
+//                }
+//            }
+//        }.start();
     }
 }
