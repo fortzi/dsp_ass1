@@ -40,12 +40,25 @@ public class SQSHelper {
         return sendResult.getMessageId();
     }
 
+    public int getMsgCount(Queues queue) throws Exception {
+        String queueUrl = sqs.getQueueUrl(queue.toString()).getQueueUrl();
+        GetQueueAttributesRequest attributesRequest = new GetQueueAttributesRequest();
+        attributesRequest.withQueueUrl(queueUrl);
+        attributesRequest.withAttributeNames("ApproximateNumberOfMessages");
+
+        GetQueueAttributesResult attributesResult = sqs.getQueueAttributes(attributesRequest);
+
+        if(!attributesResult.getAttributes().containsKey("ApproximateNumberOfMessages"))
+            throw new Exception("GetQueueAttributesResult does not contains ApproximateNumberOfMessages");
+
+        return Integer.parseInt(attributesResult.getAttributes().get("ApproximateNumberOfMessages"));
+    }
+
     public Message getMsgFromQueue(Queues queue) {
         return getMsgFromQueue(queue, true);
     }
 
     public Message getMsgFromQueue(Queues queue, boolean wait) {
-
         List<Message> messages;
         String queueUrl = sqs.getQueueUrl(queue.toString()).getQueueUrl();
 
