@@ -41,6 +41,10 @@ public class SQSHelper {
     }
 
     public Message getMsgFromQueue(Queues queue) {
+        return getMsgFromQueue(queue, true);
+    }
+
+    public Message getMsgFromQueue(Queues queue, boolean wait) {
 
         List<Message> messages;
         String queueUrl = sqs.getQueueUrl(queue.toString()).getQueueUrl();
@@ -51,9 +55,29 @@ public class SQSHelper {
 
         do {
             messages = sqs.receiveMessage(receiveRequest).getMessages();
+        } while(messages.size() == 0 && wait == true);
+
+        if(messages.size() == 0)
+            return null;
+        else
+            return messages.get(0);
+    }
+
+    public void test(Queues queue, String tag) {
+
+        List<Message> messages;
+        String queueUrl = sqs.getQueueUrl(queue.toString()).getQueueUrl();
+
+        ReceiveMessageRequest receiveRequest = new ReceiveMessageRequest(queueUrl);
+
+        receiveRequest.withMaxNumberOfMessages(10);
+        receiveRequest.withMessageAttributeNames(tag);
+
+        do {
+            messages = sqs.receiveMessage(receiveRequest).getMessages();
         } while(messages.size() == 0);
 
-        return messages.get(0);
+        System.out.println(tag + ": " + messages.size());
     }
 
 
