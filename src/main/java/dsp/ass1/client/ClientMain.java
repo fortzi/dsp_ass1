@@ -7,8 +7,14 @@ import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Filter;
+import com.amazonaws.services.sqs.AmazonSQS;
+import com.amazonaws.services.sqs.AmazonSQSClient;
+import dsp.ass1.utils.Constants;
 import dsp.ass1.utils.InstanceFactory;
+import dsp.ass1.utils.S3Helper;
+import dsp.ass1.utils.SQSHelper;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 
@@ -24,11 +30,30 @@ public class ClientMain {
             return;
         }
 
-        AWSCredentials credentials = InstanceFactory.getCredentials();
-
         // checking whether user is asking to terminate manager when done
         if(args.length > 1 && "terminate".equals(args[1]));
-            sendTeminateSignal(credentials);
+            sendTeminateSignal();
+
+        if(!isManagerAlive()) {
+            System.out.println("Manager was not found !");
+            if(!createManager())
+                return;
+        }
+        else
+            System.out.println("Manager was found !");
+
+        System.out.println("uploading " + args[0] + " to S3");
+        String fileKey = sendInputFile(args[0]);
+        System.out.println("file was uploaded successfully with key: " + fileKey);
+
+        System.out.println("sending newJobSignal to SQS");
+        String myId = sendNewJobSignal(fileKey);
+        System.out.println("message sent successfully");
+
+        System.out.println("my id: " + myId);
+
+
+
 
 
 
@@ -36,13 +61,30 @@ public class ClientMain {
 
     }
 
-    private static void sendTeminateSignal(AWSCredentials credentials) {
+    /**
+     *
+     * @param fileKey the file id of the file that
+     * @return
+     */
+    private static String sendNewJobSignal(String fileKey) {
+        SQSHelper sqs = new SQSHelper();
+        return sqs.sendMsgToQueue(SQSHelper.Queues.PENDING_JOBS,fileKey);
+    }
+
+    private static String sendInputFile(String fileName) {
+        S3Helper s3 = new S3Helper();
+        return s3.putObject(S3Helper.Folders.PENDING_JOBS, new File(fileName));
+    }
+
+    private static void sendTeminateSignal() {
 
     }
 
-    private static boolean createManager(AWSCredentials credentials) {
+    private static boolean createManager() {
         try {
-            new ManagerFactory(credentials).makeInstance();
+            System.out.println("Creating manager !");
+            new ManagerFactory().makeInstance();
+            System.out.println("Manager Created !");
         }
         catch (IOException e) {
             System.out.println("cannot create Manager instance");
@@ -52,12 +94,11 @@ public class ClientMain {
         return true;
     }
 
-    private static boolean isManagerAlive(AWSCredentials credentials) {
+    private static boolean isManagerAlive() {
 
         //creating ec2 object instance
-        Region instanceRegion = Region.getRegion(Regions.US_EAST_1);
-        AmazonEC2Client amazonEC2Client = new AmazonEC2Client(credentials);
-        amazonEC2Client.setRegion(instanceRegion);
+        AmazonEC2Client amazonEC2Client = new AmazonEC2Client();
+        amazonEC2Client.setRegion(Constants.REGION);
 
         // defining filters:
         // first filter for tag "Type = manager"

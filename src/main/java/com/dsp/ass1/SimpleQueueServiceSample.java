@@ -74,6 +74,7 @@ public class SimpleQueueServiceSample {
             // Create a queue
             System.out.println("Creating a new SQS queue called MyQueue.\n");
             CreateQueueRequest createQueueRequest = new CreateQueueRequest("MyQueue");
+
             String myQueueUrl = sqs.createQueue(createQueueRequest).getQueueUrl();
 
             // List queues

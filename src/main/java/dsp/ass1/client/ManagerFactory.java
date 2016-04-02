@@ -8,8 +8,8 @@ import dsp.ass1.utils.InstanceFactory;
  */
 public class ManagerFactory extends InstanceFactory {
 
-    public ManagerFactory(AWSCredentials credentials) {
-        super("manager", credentials);
+    public ManagerFactory() {
+        super("manager");
 
 
     }
