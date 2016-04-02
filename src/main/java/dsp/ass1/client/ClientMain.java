@@ -1,27 +1,29 @@
 package dsp.ass1.client;
 
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.regions.Region;
-import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Filter;
-import com.amazonaws.services.sqs.AmazonSQS;
-import com.amazonaws.services.sqs.AmazonSQSClient;
+import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.sqs.model.Message;
+import com.amazonaws.util.json.JSONException;
+import com.amazonaws.util.json.JSONObject;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dsp.ass1.utils.Constants;
-import dsp.ass1.utils.InstanceFactory;
 import dsp.ass1.utils.S3Helper;
 import dsp.ass1.utils.SQSHelper;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Arrays;
+import java.io.*;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by doubled on 0002, 02, 4, 2016.
  */
 public class ClientMain {
+
+    private SQSHelper sqs;
+    private S3Helper s3;
 
     public static void main(String[] args) {
 
@@ -30,32 +32,59 @@ public class ClientMain {
             return;
         }
 
-        // checking whether user is asking to terminate manager when done
-        if(args.length > 1 && "terminate".equals(args[1]));
-            sendTeminateSignal();
+        ClientMain client = new ClientMain();
+        boolean terminate = args.length > 1 && "terminate".equals(args[1]);
+
+        client.clientRun(terminate, args[0]);
+    }
+
+    public ClientMain() {
+        sqs = new SQSHelper();
+        s3 = new S3Helper();
+    }
+
+
+    private void clientRun(boolean terminate, String fileName) {
+
 
         if(!isManagerAlive()) {
             System.out.println("Manager was not found !");
-            if(!createManager())
+            if(!createManager()) {
                 return;
+            }
         }
-        else
+        else {
             System.out.println("Manager was found !");
+        }
 
-        System.out.println("uploading " + args[0] + " to S3");
-        String fileKey = sendInputFile(args[0]);
-        System.out.println("file was uploaded successfully with key: " + fileKey);
+        System.out.println("uploading " + fileName + " to S3");
+        String inputFileKey = sendInputFile(fileName);
+        System.out.println("file was uploaded successfully with key: " + inputFileKey);
 
         System.out.println("sending newJobSignal to SQS");
-        String myId = sendNewJobSignal(fileKey);
+        String myId = sendNewJobSignal(inputFileKey);
         System.out.println("message sent successfully");
 
         System.out.println("my id: " + myId);
 
+        if(terminate) {
+            System.out.println("sending termination message");
+            sendTeminateSignal();
+            System.out.println("termination message sent successfully");
+        }
 
+        System.out.println("waiting for job to finish");
+        String resultFileKey = waitAndGetResultsFile(myId);
 
-
-
+        try {
+            parseResultsFile(resultFileKey);
+        } catch (IOException e) {
+            System.out.println("problam with file opening");
+            e.printStackTrace();
+        } catch (JSONException e) {
+            System.out.println("problam parsing Json");
+            e.printStackTrace();
+        }
 
 
     }
@@ -65,21 +94,30 @@ public class ClientMain {
      * @param fileKey the file id of the file that
      * @return
      */
-    private static String sendNewJobSignal(String fileKey) {
-        SQSHelper sqs = new SQSHelper();
+    private String sendNewJobSignal(String fileKey) {
         return sqs.sendMsgToQueue(SQSHelper.Queues.PENDING_JOBS,fileKey);
     }
 
-    private static String sendInputFile(String fileName) {
-        S3Helper s3 = new S3Helper();
+    /**
+     * listening on the finished jobs queue waiting to see my name !
+     * @param myId my id
+     * @return the results file
+     */
+    private String waitAndGetResultsFile(String myId) {
+        return sqs.getMsgFromQueue(SQSHelper.Queues.FINISHED_JOBS, myId).getBody();
+    }
+
+    private String sendInputFile(String fileName) {
         return s3.putObject(S3Helper.Folders.PENDING_JOBS, new File(fileName));
     }
 
-    private static void sendTeminateSignal() {
-
+    private void sendTeminateSignal() {
+        Map<String,String> atts = new HashMap<String, String>();
+        atts.put(Constants.TERMINATION_MESSAGE,"true");
+        sqs.sendMsgToQueue(SQSHelper.Queues.PENDING_JOBS, "Termination messages !!", atts);
     }
 
-    private static boolean createManager() {
+    private boolean createManager() {
         try {
             System.out.println("Creating manager !");
             new ManagerFactory().makeInstance();
@@ -93,7 +131,7 @@ public class ClientMain {
         return true;
     }
 
-    private static boolean isManagerAlive() {
+    private boolean isManagerAlive() {
 
         //creating ec2 object instance
         AmazonEC2Client amazonEC2Client = new AmazonEC2Client();
@@ -116,4 +154,70 @@ public class ClientMain {
 
         return describeRes.getReservations().size() != 0;
     }
+
+    private void parseResultsFile(String file) throws IOException, JSONException {
+
+        String line;
+        JSONObject tweet;
+
+        PrintWriter writer = new PrintWriter("finalOutput.html");
+        writer.println("<html>");
+        writer.println("<body>");
+
+        InputStream stream = s3.getObject(file).getObjectContent();
+
+        BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+
+        while((line = reader.readLine()) != null) {
+            tweet = new JSONObject(line);
+
+            writer.print("<p><b><font color=\"");
+            switch (tweet.getInt("sentiment")) {
+                case 0:
+                    writer.print("DarkRed\">");
+                    break;
+                case 1:
+                    writer.print("Red\">");
+                    break;
+                case 2:
+                    writer.print("Black\">");
+                    break;
+                case 3:
+                    writer.print("LightGreen\">");
+                    break;
+                case 4:
+                    writer.print("DarkGreen\">");
+                    break;
+            }
+
+            writer.print(tweet.getString("content"));
+            writer.print("</font></b>");
+
+            HashMap<String, String> result =
+                    new ObjectMapper().readValue(tweet.getString("entities"), HashMap.class);
+
+            for (Map.Entry<String, String> entry : result.entrySet()) {
+                writer.print("<br>");
+                writer.print(entry.getKey());
+                writer.print(" = ");
+                writer.print(entry.getValue());
+            }
+
+            writer.print("</p>\n");
+        }
+
+        writer.close();
+    }
+
+    public String addResult(String tweetContent, int sentiment, Map<String, String> entities) throws JSONException {
+
+        JSONObject result = new JSONObject();
+
+        result.put("content", tweetContent);
+        result.put("sentiment", sentiment);
+        result.put("entities", new JSONObject(entities));
+
+        return result.toString();
+    }
+
 }
