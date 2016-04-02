@@ -27,12 +27,11 @@ public class S3Helper {
     /**
      * Puts a file in the default bucket
      * @param folder The folder in which to put the file in.
-     * @param objectName The key representing the object in S3.
      * @param file The file to put in S3.
      * @return The URL to the newly uploaded file.
      */
-    public String putObject(Folders folder, String objectName, File file) {
-        String objectKey = folder + "/" + objectName + "_" + file.hashCode();
+    public String putObject(Folders folder, File file) {
+        String objectKey = folder + "/" + file.hashCode();
         PutObjectResult result = s3.putObject(new PutObjectRequest(BUCKET_NAME, objectKey, file));
 
         return objectKey;
