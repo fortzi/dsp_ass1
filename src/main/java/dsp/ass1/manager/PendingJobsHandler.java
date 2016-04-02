@@ -61,7 +61,7 @@ public class PendingJobsHandler implements Runnable {
             // Send SQS Messages
             for (String tweetURL : job.getUrls()) {
                 Map<String, String> attributes = new HashMap<String, String>();
-                attributes.put("job_id", jobObjectKey);
+                attributes.put(Constants.JOB_ID_ATTRIBUTE, jobObjectKey);
                 sqs.sendMsgToQueue(SQSHelper.Queues.PENDING_TWEETS, tweetURL, attributes);
             }
 
