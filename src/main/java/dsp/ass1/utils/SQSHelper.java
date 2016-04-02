@@ -40,7 +40,7 @@ public class SQSHelper {
         return sendResult.getMessageId();
     }
 
-    public int getMsgCount(Queues queue) throws Exception {
+    public int getMsgCount(Queues queue) {
         String queueUrl = sqs.getQueueUrl(queue.toString()).getQueueUrl();
         GetQueueAttributesRequest attributesRequest = new GetQueueAttributesRequest();
         attributesRequest.withQueueUrl(queueUrl);
