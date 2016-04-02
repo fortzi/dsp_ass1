@@ -24,12 +24,22 @@ public class Job {
         this.results = new PrintWriter(new BufferedWriter(new FileWriter(file.getPath(), true)));
     }
 
-    public int addResult(String tweetContent, int sentiment, Map<String, String> entities) throws JSONException {
+    public void finalize() throws Throwable {
+        results.close();
+        super.finalize();
+    }
+
+    public int addResult(String tweetContent, int sentiment, Map<String, String> entities) throws Exception {
         JSONObject result = new JSONObject();
 
-        result.put("content", tweetContent);
-        result.put("sentiment", sentiment);
-        result.put("entities", new JSONObject(entities));
+        try {
+            result.put("content", tweetContent);
+            result.put("sentiment", sentiment);
+            result.put("entities", new JSONObject(entities));
+        } catch (JSONException e) {
+            throw new Exception("This should not happen.");
+        }
+
 
         results.println(result.toString());
         return --remainingUrls;

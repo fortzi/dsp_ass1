@@ -43,7 +43,7 @@ public class InstanceFactory {
      * @param count How many instances to create. It is not advised to
      * @throws IOException
      */
-    public void makeInstances(int count) throws IOException {
+    public void makeInstances(int count) {
         RunInstancesResult runInstancesResult = null;
         AmazonEC2Client amazonEC2Client = null;
 

@@ -7,6 +7,7 @@ import dsp.ass1.utils.SQSHelper;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -26,12 +27,14 @@ public class PendingJobsHandler implements Runnable {
     S3Helper s3;
     SQSHelper sqs;
     Map<String, Job> allJobs;
+    TwitterWorkerFactory workerFactory;
     int workerCount = 0;
 
     public PendingJobsHandler(Map<String, Job> allJobs) {
         this.s3 = new S3Helper();
         this.sqs = new SQSHelper();
         this.allJobs = allJobs;
+        this.workerFactory = new TwitterWorkerFactory();
     }
 
     public void run() {
@@ -55,12 +58,15 @@ public class PendingJobsHandler implements Runnable {
             allJobs.put(jobObjectKey, job);
             // Send SQS Messages
             for (String tweetURL : job.getUrls()) {
-                sqs.sendMsgToQueue(SQSHelper.Queues.PENDING_TWEETS, tweetURL);
+                Map<String, String> attributes = new HashMap<String, String>();
+                attributes.put("job_id", jobObjectKey);
+                sqs.sendMsgToQueue(SQSHelper.Queues.PENDING_TWEETS, tweetURL, attributes);
             }
 
             int messageCount = sqs.getMsgCount(SQSHelper.Queues.PENDING_TWEETS);
-            if (messageCount / workerCount > Constants.TWEETS_PER_WORKER) {
-
+            int newWorkersCount = messageCount / workerCount - Constants.TWEETS_PER_WORKER;
+            if (newWorkersCount > 0) {
+                workerFactory.makeInstances(newWorkersCount);
             }
 
             sqs.removeMsgFromQueue(SQSHelper.Queues.PENDING_JOBS, jobMessage);
