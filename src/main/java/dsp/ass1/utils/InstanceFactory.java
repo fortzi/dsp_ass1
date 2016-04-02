@@ -26,9 +26,9 @@ public class InstanceFactory {
     AWSCredentials credentials = null;
     String jarFileName = null;
 
-    protected InstanceFactory(String jarFileName) {
+    protected InstanceFactory(String jarFileName, AWSCredentials credentials) {
         this.jarFileName = jarFileName;
-        this.credentials = getCredentials();
+        this.credentials = credentials;
     }
 
     //preping EC2 instance and running specified jarFile
