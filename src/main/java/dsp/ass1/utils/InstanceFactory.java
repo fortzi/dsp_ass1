@@ -28,16 +28,7 @@ public class InstanceFactory {
 
     protected InstanceFactory(String jarFileName) {
         this.jarFileName = jarFileName;
-
-        try {
-            credentials = new ProfileCredentialsProvider().getCredentials();
-        } catch (Exception e) {
-            throw new AmazonClientException (
-                "Cannot load the credentials from the credential profiles file. " +
-                        "Please make sure that your credentials file is at the correct " +
-                        "location (~/.aws/credentials), and is in valid format.",
-                e);
-        }
+        this.credentials = getCredentials();
     }
 
     //preping EC2 instance and running specified jarFile
@@ -54,7 +45,7 @@ public class InstanceFactory {
                 .withMaxCount(1)
                 .withKeyName(KEY_NAME)
                 .withSecurityGroups(SECURITY_GROUP)
-                .setUserData(getUserData(jarFile));
+                .setUserData(getUserData(jarFileName));
 
         RunInstancesResult runInstancesResult = amazonEC2Client.runInstances(runInstancesRequest);
     }
@@ -82,5 +73,21 @@ public class InstanceFactory {
         }
 
         return base64UserData;
+    }
+
+    public static AWSCredentials getCredentials() {
+        AWSCredentials credentials = null;
+
+        try {
+            credentials = new ProfileCredentialsProvider().getCredentials();
+        } catch (Exception e) {
+            throw new AmazonClientException (
+                    "Cannot load the credentials from the credential profiles file. " +
+                            "Please make sure that your credentials file is at the correct " +
+                            "location (~/.aws/credentials), and is in valid format.",
+                    e);
+        }
+
+        return credentials;
     }
 }
