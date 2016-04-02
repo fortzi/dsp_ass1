@@ -22,4 +22,9 @@ public class ManagerMain {
             }
         }.start();
     }
+
+    public void print() {
+
+        System.out.println("kaki");
+    }
 }
