@@ -4,6 +4,8 @@ package dsp.ass1.manager;
  * Created by Ofer Caspi on 03/28/2016.
  */
 
+import dsp.ass1.utils.InstanceFactory;
+
 import java.io.IOException;
 import java.util.Dictionary;
 
@@ -34,7 +36,7 @@ public class ManagerMain {
                         Finalize local job state
         */
 
-        final TwitterWorkerFactory twitterWorkerFactory = new TwitterWorkerFactory();
+        final TwitterWorkerFactory twitterWorkerFactory = new TwitterWorkerFactory(InstanceFactory.getCredentials());
 
         (new Thread(new PendingJobsHandler())).start();
         (new Thread(new FinishedTweetsHandler())).start();
