@@ -43,17 +43,8 @@ public class S3Helper {
      * @return The object's content as a string.
      * @throws AmazonClientException if the result input was unable to be processed
      */
-    public String getObject(String objectKey) throws AmazonClientException {
-        S3Object object = s3.getObject(new GetObjectRequest(BUCKET_NAME, objectKey));
-        String result = "";
-
-        try {
-            result = getStringFromInputStream(object.getObjectContent());
-        } catch (IOException e) {
-            throw new AmazonClientException("Error while processing the result stream.", e);
-        }
-
-        return result;
+    public S3Object getObject(String objectKey) throws AmazonClientException {
+        return s3.getObject(new GetObjectRequest(BUCKET_NAME, objectKey));
     }
 
     /**
@@ -63,12 +54,12 @@ public class S3Helper {
      * @return The object's content as a string.
      * @throws AmazonClientException if the result input was unable to be processed
      */
-    public String getObject(Folders folder, String objectName) throws AmazonClientException {
+    public S3Object getObject(Folders folder, String objectName) throws AmazonClientException {
         return getObject(folder + "/" + objectName);
     }
 
-    public ArrayList<String> getAllObjects(Folders folder) {
-        ArrayList<String> jobs = new ArrayList<String>();
+    public ArrayList<S3Object> getAllObjects(Folders folder) {
+        ArrayList<S3Object> allObjects = new ArrayList<S3Object>();
 
         ListObjectsRequest listObjectRequest = new ListObjectsRequest().
             withBucketName(BUCKET_NAME).
@@ -77,13 +68,13 @@ public class S3Helper {
         ObjectListing objectListing = s3.listObjects(listObjectRequest);
 
         for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries()) {
-            jobs.add(getObject(objectSummary.getKey()));
+            allObjects.add(getObject(objectSummary.getKey()));
         }
 
-        return jobs;
+        return allObjects;
     }
 
-    private String getStringFromInputStream(InputStream input) throws IOException {
+    public static String getStringFromInputStream(InputStream input) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(input));
         StringBuilder result = new StringBuilder();
 
