@@ -21,28 +21,40 @@ import java.util.Arrays;
      Remove the job links from SQS
  */
 public class PendingJobsHandler implements Runnable {
-    S3Helper s3 = new S3Helper();
-    String jobURL = null;
-    ArrayList<Job> allJobs = null;
-    ArrayList<Job> tweets = null;
+    S3Helper s3;
+    String jobURL;
+    ArrayList<Job> allJobs;
+    ArrayList<Job> tweets;
+    boolean kill;
+
+    public PendingJobsHandler() {
+        this.s3 = new S3Helper();
+        this.jobURL = null;
+        this.allJobs = null;
+        this.tweets = null;
+        this.kill = false;
+    }
 
     public void run() {
-        while (true) {
+        while (!kill) {
             // Get Jobs
             jobURL = "https://s3.amazonaws.com/dsp-ass1/pending-jobs/tweetLinks.txt";
 
             for (String rawJob : s3.getAllObjects(S3Helper.Folders.PENDING_JOBS)) {
                 Job job = null;
-
                 try {
                     job = new Job(rawJob.split("\n"));
                 } catch (IOException e) {
                     System.err.println("Error parsing job at: " + jobURL);
                     continue;
                 }
-
                 allJobs.add(job);
 
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }

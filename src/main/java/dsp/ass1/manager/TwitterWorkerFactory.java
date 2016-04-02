@@ -10,7 +10,7 @@ import dsp.ass1.utils.InstanceFactory;
 import java.io.IOException;
 
 public class TwitterWorkerFactory extends InstanceFactory {
-    public TwitterWorkerFactory(AWSCredentials credentials) {
-        super("hello-world", credentials);
+    public TwitterWorkerFactory() {
+        super("hello-world");
     }
 }

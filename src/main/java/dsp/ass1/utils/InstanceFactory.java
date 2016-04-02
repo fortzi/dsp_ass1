@@ -24,18 +24,16 @@ public class InstanceFactory {
     final String PACKAGE_FILE_NAME      = "package.zip";
     final String S3_ADDRESS             = "https://s3.amazonaws.com/dsp-ass1/" + PACKAGE_FILE_NAME;
 
-    AWSCredentials credentials = null;
     String jarFileName = null;
 
-    protected InstanceFactory(String jarFileName, AWSCredentials credentials) {
+    protected InstanceFactory(String jarFileName) {
         this.jarFileName = jarFileName;
-        this.credentials = credentials;
     }
 
     //preping EC2 instance and running specified jarFile
     public void makeInstance() throws IOException {
         Region instanceRegion = Region.getRegion(Regions.US_EAST_1);
-        AmazonEC2Client amazonEC2Client = new AmazonEC2Client(credentials);
+        AmazonEC2Client amazonEC2Client = new AmazonEC2Client();
         amazonEC2Client.setRegion(instanceRegion);
 
         RunInstancesRequest runInstancesRequest = new RunInstancesRequest();
@@ -86,21 +84,5 @@ public class InstanceFactory {
         }
 
         return base64UserData;
-    }
-
-    public static AWSCredentials getCredentials() {
-        AWSCredentials credentials = null;
-
-        try {
-            credentials = new ProfileCredentialsProvider().getCredentials();
-        } catch (Exception e) {
-            throw new AmazonClientException (
-                    "Cannot load the credentials from the credential profiles file. " +
-                            "Please make sure that your credentials file is at the correct " +
-                            "location (~/.aws/credentials), and is in valid format.",
-                    e);
-        }
-
-        return credentials;
     }
 }
