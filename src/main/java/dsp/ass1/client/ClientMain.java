@@ -118,16 +118,11 @@ public class ClientMain {
     }
 
     private boolean createManager() {
-        try {
-            System.out.println("Creating manager !");
-            new ManagerFactory().makeInstance();
-            System.out.println("Manager Created !");
-        }
-        catch (IOException e) {
-            System.out.println("cannot create Manager instance");
-            System.out.println(e.getMessage());
-            return false;
-        }
+
+        System.out.println("Creating manager !");
+        new ManagerFactory().makeInstance();
+        System.out.println("Manager Created !");
+
         return true;
     }
 
