@@ -16,27 +16,32 @@ import java.io.UnsupportedEncodingException;
  * Created by Ofer on 03/30/2016.
  */
 public class InstanceFactory {
-    final static String GENERIC_IMAGE_AMI_ID   = "ami-c03b30aa";
-    final static String INSTANCE_TYPE          = "t2.micro";
-    final static String KEY_NAME               = "bansko";
-    final static String SECURITY_GROUP         = "launch-wizard-1";
-    final static String PACKAGE_FILE_NAME      = "package.zip";
-    final static String S3_ADDRESS             = "https://s3.amazonaws.com/dsp-ass1/" + PACKAGE_FILE_NAME;
+    final String GENERIC_IMAGE_AMI_ID   = "ami-c03b30aa";
+    final String INSTANCE_TYPE          = "t2.micro";
+    final String KEY_NAME               = "bansko";
+    final String SECURITY_GROUP         = "launch-wizard-1";
+    final String PACKAGE_FILE_NAME      = "package.zip";
+    final String S3_ADDRESS             = "https://s3.amazonaws.com/dsp-ass1/" + PACKAGE_FILE_NAME;
 
-    //preping EC2 instance and running specified jarFile
-    protected void makeInstance(String jarFile) throws IOException {
-        AWSCredentials credentials = null;
+    AWSCredentials credentials = null;
+    String jarFileName = null;
+
+    protected InstanceFactory(String jarFileName) {
+        this.jarFileName = jarFileName;
 
         try {
             credentials = new ProfileCredentialsProvider().getCredentials();
         } catch (Exception e) {
-            throw new AmazonClientException(
+            throw new AmazonClientException (
                 "Cannot load the credentials from the credential profiles file. " +
                         "Please make sure that your credentials file is at the correct " +
                         "location (~/.aws/credentials), and is in valid format.",
                 e);
         }
+    }
 
+    //preping EC2 instance and running specified jarFile
+    public void makeInstance() throws IOException {
         AmazonEC2Client amazonEC2Client = new AmazonEC2Client(credentials);
         amazonEC2Client.setEndpoint("ec2.us-east-1.amazonaws.com");
 
@@ -55,7 +60,7 @@ public class InstanceFactory {
     }
 
     // returning user data in BASE64 format
-    private static String getUserData(String jarFile) {
+    private String getUserData(String jarFile) {
         String base64UserData = null;
         StringBuilder userData = new StringBuilder();
 

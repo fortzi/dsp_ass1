@@ -8,6 +8,15 @@ import java.io.IOException;
 
 public class ManagerMain {
     public static void main(String[] args) throws IOException {
+        /*
+
+        Forever:
+            Download jobs from sqs
+            For each job:
+
+
+        */
+
         final TwitterWorkerFactory twitterWorkerFactory = new TwitterWorkerFactory();
 
         new Thread() {
@@ -21,10 +30,5 @@ public class ManagerMain {
                 }
             }
         }.start();
-    }
-
-    public void print() {
-
-        System.out.println("pipi");
     }
 }
