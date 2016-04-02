@@ -17,7 +17,7 @@ import java.util.List;
  * Created by Ofer on 03/30/2016.
  */
 public class InstanceFactory {
-    final String GENERIC_IMAGE_AMI_ID   = "ami-c03b30aa";
+    final String GENERIC_IMAGE_AMI_ID   = "ami-9f363df5";
     final String INSTANCE_TYPE          = "t2.micro";
     final String KEY_NAME               = "bansko";
     final String SECURITY_GROUP         = "launch-wizard-1";
@@ -77,7 +77,7 @@ public class InstanceFactory {
         userData.append("mv ~/ass1/credentials ~/.aws/").append("\n");
         userData.append("java -jar ~/ass1/jars/").append(jarFile).append(".jar > log.txt").append("\n");
         userData.append("curl -X POST -d \"`cat log.txt`\" http://requestb.in/18jmtli1").append("\n");
-        userData.append("sudo shutdown -h now");
+        //userData.append("sudo shutdown -h now");
 
         try {
             base64UserData = new String(Base64.encodeBase64(userData.toString().getBytes("UTF-8")), "UTF-8");
