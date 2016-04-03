@@ -1,47 +1,40 @@
 package dsp.ass1.manager;
 
-import com.amazonaws.util.json.JSONException;
-import com.amazonaws.util.json.JSONObject;
-
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
-import java.util.Map;
+import java.util.Arrays;
 
 /**
- * Created by user1 on 04/02/2016.
+ * Created by Ofer Caspi on 04/02/2016.
+ *
  */
 public class Job {
     String[] urls;
     PrintWriter results;
+    File resultsFile;
     int remainingUrls;
+    String id;
 
-    public Job(String[] urls) throws IOException {
+    public Job(String[] urls, String id) throws IOException {
+        this.id = id;
         this.urls = urls;
         this.remainingUrls = urls.length;
-        File file = File.createTempFile(String.valueOf(urls.hashCode()), ".txt");
-        this.results = new PrintWriter(new BufferedWriter(new FileWriter(file.getPath(), true)));
+        this.resultsFile = File.createTempFile(String.valueOf(Arrays.hashCode(urls)), ".txt");
+        this.results = new PrintWriter(new BufferedWriter(new FileWriter(resultsFile.getPath(), true)));
     }
 
-    public void finalize() throws Throwable {
+    public File getResultsFile() {
+        return resultsFile;
+    }
+
+    public void close() {
         results.close();
-        super.finalize();
+        if(!resultsFile.delete()) {
+            System.err.println("Error while deleting temp file for job " + getId());
+        }
     }
 
-    public int addResult(String tweetContent, int sentiment, Map<String, String> entities) throws Exception {
-        JSONObject result = new JSONObject();
-
-        try {
-            result.put("content", tweetContent);
-            result.put("sentiment", sentiment);
-            result.put("entities", new JSONObject(entities));
-        } catch (JSONException e) {
-            throw new Exception("This should not happen.");
-        }
-
-
-        results.println(result.toString());
+    public int addResult(String result) {
+        results.println(result);
         return --remainingUrls;
     }
 
@@ -49,12 +42,8 @@ public class Job {
         return remainingUrls == 0;
     }
 
-    public String getUrlAt(int i) {
-        if (i < urls.length) {
-            return urls[i];
-        }
-
-        throw new ArrayIndexOutOfBoundsException();
+    public String getId() {
+        return id;
     }
 
     public String[] getUrls() {

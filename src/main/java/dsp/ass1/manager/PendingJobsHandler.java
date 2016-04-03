@@ -6,29 +6,18 @@ import dsp.ass1.utils.S3Helper;
 import dsp.ass1.utils.SQSHelper;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created by user1 on 04/02/2016.
- *   Get jobs links from SQS
-     For each job:
-         Download job from S3
-         Add entry to dictionary
-         Make file to append results to
-         For each tweet:
-            Send (job_id, link) to SQS
-         Check SQS message count
-         Add additional workers if needed
-     Remove the job links from SQS
+ * Created by Ofer Caspi on 04/02/2016.
+ *
  */
 public class PendingJobsHandler implements Runnable {
     S3Helper s3;
     SQSHelper sqs;
     Map<String, Job> allJobs;
     TwitterWorkerFactory workerFactory;
-    int workerCount = 0;
 
     public PendingJobsHandler(Map<String, Job> allJobs) {
         this.s3 = new S3Helper();
@@ -38,39 +27,50 @@ public class PendingJobsHandler implements Runnable {
     }
 
     public void run() {
+        System.out.println("Starting pending jobs handler");
+        ManagerMain.Auxiliary.workerCount = 0;
+
         while (true) {
+            System.out.println("Waiting for jobs");
             Message jobMessage = sqs.getMsgFromQueue(SQSHelper.Queues.PENDING_JOBS);
+            System.out.println("Found new job");
+
             if (jobMessage.getAttributes().containsKey(Constants.TERMINATION_MESSAGE)) {
+                System.out.println("Terminating");
+                ManagerMain.Auxiliary.terminate = true;
                 break;
             }
 
-            String jobObjectKey = jobMessage.getBody().toString();
-            String rawJob = null;
-            Job job = null;
+            String jobObjectKey = jobMessage.getBody();
+            Job job;
 
             try {
-                rawJob = S3Helper.getStringFromInputStream(s3.getObject(jobObjectKey).getObjectContent());
-                job = new Job(rawJob.split("\n"));
+                System.out.println("Retrieving job contents from S3");
+                String rawJob = S3Helper.getStringFromInputStream(s3.getObject(jobObjectKey).getObjectContent());
+                job = new Job(rawJob.split("\n"), jobMessage.getMessageId());
             } catch (IOException e) {
                 System.err.println("Error with job: " + jobObjectKey);
                 e.printStackTrace();
                 continue;
             }
 
-            allJobs.put(jobObjectKey, job);
-            // Send SQS Messages
+            allJobs.put(job.getId(), job);
+            System.out.println("Dispatching tweet tasks to SQS");
+            Map<String, String> attributes = new HashMap<String, String>();
+            attributes.put(Constants.JOB_ID_ATTRIBUTE, job.getId());
             for (String tweetURL : job.getUrls()) {
-                Map<String, String> attributes = new HashMap<String, String>();
-                attributes.put(Constants.JOB_ID_ATTRIBUTE, jobObjectKey);
                 sqs.sendMsgToQueue(SQSHelper.Queues.PENDING_TWEETS, tweetURL, attributes);
             }
 
             int messageCount = sqs.getMsgCount(SQSHelper.Queues.PENDING_TWEETS);
-            int newWorkersCount = messageCount / workerCount - Constants.TWEETS_PER_WORKER;
+            int newWorkersCount = messageCount / Constants.TWEETS_PER_WORKER - ManagerMain.Auxiliary.workerCount;
+
             if (newWorkersCount > 0) {
-                workerFactory.makeInstances(newWorkersCount);
+                System.out.println("Creating " + newWorkersCount + " new workers");
+                ManagerMain.Auxiliary.workerCount += workerFactory.makeInstances(newWorkersCount);
             }
 
+            System.out.println("Removing job from SQS queue");
             sqs.removeMsgFromQueue(SQSHelper.Queues.PENDING_JOBS, jobMessage);
         }
     }

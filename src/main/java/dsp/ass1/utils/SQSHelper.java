@@ -1,6 +1,5 @@
 package dsp.ass1.utils;
 
-import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.model.*;
@@ -8,10 +7,10 @@ import com.amazonaws.services.sqs.model.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 
 /**
  * Created by doubled on 0002, 02, 4, 2016.
+ *
  */
 public class SQSHelper {
 
@@ -26,17 +25,14 @@ public class SQSHelper {
     }
 
     public String sendMsgToQueue(Queues queue, String msg, Map<String,String> att) {
-
         String queueUrl = sqs.getQueueUrl(queue.toString()).getQueueUrl();
-
         SendMessageRequest sendRequest = new SendMessageRequest(queueUrl, msg);
 
         for(String key : att.keySet()) {
-            sendRequest.addMessageAttributesEntry(key, new MessageAttributeValue().withStringValue(att.get(key)));
+            sendRequest.addMessageAttributesEntry(key, new MessageAttributeValue().withStringValue(att.get(key)).withDataType("String"));
         }
 
         SendMessageResult sendResult = sqs.sendMessage(sendRequest);
-
         return sendResult.getMessageId();
     }
 
@@ -47,7 +43,6 @@ public class SQSHelper {
         attributesRequest.withAttributeNames("ApproximateNumberOfMessages");
 
         GetQueueAttributesResult attributesResult = sqs.getQueueAttributes(attributesRequest);
-
         return Integer.parseInt(attributesResult.getAttributes().get("ApproximateNumberOfMessages"));
     }
 
@@ -58,7 +53,6 @@ public class SQSHelper {
     public Message getMsgFromQueue(Queues queue, boolean wait) {
         List<Message> messages;
         String queueUrl = sqs.getQueueUrl(queue.toString()).getQueueUrl();
-
         ReceiveMessageRequest receiveRequest = new ReceiveMessageRequest(queueUrl);
 
         receiveRequest.withMaxNumberOfMessages(1);
@@ -111,7 +105,7 @@ public class SQSHelper {
 
 
 
-    public static enum Queues {
+    public enum Queues {
         PENDING_JOBS {
             public String toString() {
                 return "dsp-ass1-pending-jobs";

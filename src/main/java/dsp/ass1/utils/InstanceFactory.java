@@ -1,24 +1,15 @@
 package dsp.ass1.utils;
 
-import com.amazonaws.AmazonClientException;
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.profile.ProfileCredentialsProvider;
-import com.amazonaws.regions.Region;
-import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ec2.model.*;
-import com.sun.xml.internal.bind.v2.runtime.reflect.opt.Const;
-import com.sun.xml.internal.ws.runtime.config.ObjectFactory;
 import org.apache.commons.codec.binary.Base64;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * Created by Ofer on 03/30/2016.
+ * Created by Ofer Caspi on 03/30/2016.
+ *
  */
 public class InstanceFactory {
     final String GENERIC_IMAGE_AMI_ID   = "ami-9f363df5";
@@ -27,7 +18,6 @@ public class InstanceFactory {
     final String SECURITY_GROUP         = "launch-wizard-1";
     final String PACKAGE_FILE_NAME      = "package.zip";
     final String S3_ADDRESS             = "https://s3.amazonaws.com/dsp-ass1/" + PACKAGE_FILE_NAME;
-    final int MAXIMUM_INSTANCES         = 20;
 
     static int runningInstances = 0;
     String jarFileName = null;
@@ -42,10 +32,10 @@ public class InstanceFactory {
      *          How many instances to create.
      *          It is not advised to create too many at once.
      */
-    public synchronized void makeInstances(int count) {
-        int newInstancesCount = Math.min(count, MAXIMUM_INSTANCES - runningInstances);
+    public synchronized int makeInstances(int count) {
+        int newInstancesCount = Math.min(count, Constants.INSTANCE_LIMIT - runningInstances);
         if (newInstancesCount == 0) {
-            return;
+            return 0;
         }
 
         AmazonEC2Client amazonEC2Client = new AmazonEC2Client();
@@ -74,13 +64,15 @@ public class InstanceFactory {
                     .withTags(new Tag("Type", jarFileName));
             amazonEC2Client.createTags(createTagsRequest);
         }
+
+        return newInstancesCount;
     }
 
     /**
      * Preping EC2 instance and running specified jarFile.
      */
-    public void makeInstance() {
-        makeInstances(1);
+    public int makeInstance() {
+        return makeInstances(1);
     }
 
     // returning user data in BASE64 format
