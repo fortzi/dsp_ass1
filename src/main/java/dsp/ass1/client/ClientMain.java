@@ -4,7 +4,6 @@ import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Filter;
-import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.util.json.JSONException;
 import com.amazonaws.util.json.JSONObject;
@@ -15,6 +14,7 @@ import dsp.ass1.utils.SQSHelper;
 
 import java.io.*;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -75,7 +75,11 @@ public class ClientMain {
 
         System.out.println("waiting for job to finish");
         String resultFileKey = waitAndGetResultsFile(myId);
+        System.out.println("job finished !");
 
+
+
+        System.out.println("parsing file");
         try {
             parseResultsFile(resultFileKey);
         } catch (IOException e) {
@@ -86,7 +90,7 @@ public class ClientMain {
             e.printStackTrace();
         }
 
-
+        System.out.println("parsing completed, goodbye !");
     }
 
     /**
@@ -104,7 +108,9 @@ public class ClientMain {
      * @return the results file
      */
     private String waitAndGetResultsFile(String myId) {
-        return sqs.getMsgFromQueue(SQSHelper.Queues.FINISHED_JOBS, myId).getBody();
+        Message msg = sqs.getMsgFromQueue(SQSHelper.Queues.FINISHED_JOBS, myId);
+        sqs.removeMsgFromQueue(SQSHelper.Queues.FINISHED_JOBS, msg);
+        return msg.getBody();
     }
 
     private String sendInputFile(String fileName) {
@@ -126,6 +132,10 @@ public class ClientMain {
         return true;
     }
 
+    /**
+     * find out whether there is an instance with tag "Type" as "manager
+     * @return true if the manager exists
+     */
     private boolean isManagerAlive() {
 
         //creating ec2 object instance
@@ -150,17 +160,22 @@ public class ClientMain {
         return describeRes.getReservations().size() != 0;
     }
 
+    /**
+     *
+     * @param file
+     * @throws IOException
+     * @throws JSONException
+     */
     private void parseResultsFile(String file) throws IOException, JSONException {
 
         String line;
-        JSONObject tweet;
+        JSONObject tweet, entities;
 
         PrintWriter writer = new PrintWriter("finalOutput.html");
         writer.println("<html>");
         writer.println("<body>");
 
         InputStream stream = s3.getObject(file).getObjectContent();
-
         BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
 
         while((line = reader.readLine()) != null) {
@@ -168,51 +183,32 @@ public class ClientMain {
 
             writer.print("<p><b><font color=\"");
             switch (tweet.getInt("sentiment")) {
-                case 0:
-                    writer.print("DarkRed\">");
-                    break;
-                case 1:
-                    writer.print("Red\">");
-                    break;
-                case 2:
-                    writer.print("Black\">");
-                    break;
-                case 3:
-                    writer.print("LightGreen\">");
-                    break;
-                case 4:
-                    writer.print("DarkGreen\">");
-                    break;
+                case 0: writer.print("DarkRed\">"); break;
+                case 1: writer.print("Red\">"); break;
+                case 2: writer.print("Black\">"); break;
+                case 3: writer.print("LightGreen\">"); break;
+                case 4: writer.print("DarkGreen\">"); break;
             }
 
             writer.print(tweet.getString("content"));
             writer.print("</font></b>");
 
-            HashMap<String, String> result =
-                    new ObjectMapper().readValue(tweet.getString("entities"), HashMap.class);
+            entities = tweet.getJSONObject("entities");
+            Iterator<?> keys = entities.keys();
 
-            for (Map.Entry<String, String> entry : result.entrySet()) {
-                writer.print("<br>");
-                writer.print(entry.getKey());
-                writer.print(" = ");
-                writer.print(entry.getValue());
+            while( keys.hasNext() ){
+                String key = (String)keys.next();
+                String value = entities.getString(key);
+                writer.print("<br>" + key + " = " + value);
             }
 
             writer.print("</p>\n");
         }
 
+        writer.println("</body>");
+        writer.println("</html>");
+
         writer.close();
-    }
-
-    public String addResult(String tweetContent, int sentiment, Map<String, String> entities) throws JSONException {
-
-        JSONObject result = new JSONObject();
-
-        result.put("content", tweetContent);
-        result.put("sentiment", sentiment);
-        result.put("entities", new JSONObject(entities));
-
-        return result.toString();
     }
 
 }
