@@ -107,7 +107,10 @@ public class WorkerMain {
             sqs.removeMsgFromQueue(SQSHelper.Queues.PENDING_TWEETS, msg);
         }
 
-        //upload statistics.
+        // remove termination message from queue
+        sqs.removeMsgFromQueue(SQSHelper.Queues.PENDING_TWEETS, msg);
+
+        // upload statistics.
         String id = getInstanceId();
         File statistics = createStatisticsFile(id);
         s3.putObject(S3Helper.Folders.STATISTICS, statistics);
