@@ -1,5 +1,5 @@
 <component name="ArtifactManager">
-  <artifact type="jar" name="worker">
+  <artifact type="jar" build-on-make="true" name="worker">
     <output-path>$PROJECT_DIR$/classes/artifacts/worker</output-path>
     <root id="archive" name="dsp-ass1.jar">
       <element id="directory" name="META-INF">
