@@ -60,6 +60,7 @@ public class S3Helper {
      */
     public enum Folders {
         FINISHED_JOBS   { public String toString() { return "finished-jobs"; } },
-        PENDING_JOBS    { public String toString() { return "pending-jobs"; } }
+        PENDING_JOBS    { public String toString() { return "pending-jobs"; } },
+        STATISTICS    { public String toString() { return "statistics"; } }
     }
 }

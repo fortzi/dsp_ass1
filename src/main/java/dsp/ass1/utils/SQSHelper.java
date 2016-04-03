@@ -125,8 +125,11 @@ public class SQSHelper {
             public String toString() {
                 return "dsp-ass1-finished-tweets";
             }
+        },
+        DEBUGGING {
+            public String toString() {
+                return "dsp-ass1-debugging";
+            }
         }
-
-
     }
 }
