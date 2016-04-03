@@ -4,7 +4,6 @@ import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Filter;
-import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.util.json.JSONException;
 import com.amazonaws.util.json.JSONObject;
@@ -75,7 +74,11 @@ public class ClientMain {
 
         System.out.println("waiting for job to finish");
         String resultFileKey = waitAndGetResultsFile(myId);
+        System.out.println("job finished !");
 
+
+
+        System.out.println("parsing file");
         try {
             parseResultsFile(resultFileKey);
         } catch (IOException e) {
@@ -86,7 +89,7 @@ public class ClientMain {
             e.printStackTrace();
         }
 
-
+        System.out.println("parsing completed, goodbye !");
     }
 
     /**
@@ -104,7 +107,9 @@ public class ClientMain {
      * @return the results file
      */
     private String waitAndGetResultsFile(String myId) {
-        return sqs.getMsgFromQueue(SQSHelper.Queues.FINISHED_JOBS, myId).getBody();
+        Message msg = sqs.getMsgFromQueue(SQSHelper.Queues.FINISHED_JOBS, myId);
+        sqs.removeMsgFromQueue(SQSHelper.Queues.FINISHED_JOBS, msg);
+        return msg.getBody();
     }
 
     private String sendInputFile(String fileName) {
@@ -201,18 +206,10 @@ public class ClientMain {
             writer.print("</p>\n");
         }
 
+        writer.println("</body>");
+        writer.println("</html>");
+
         writer.close();
-    }
-
-    public String addResult(String tweetContent, int sentiment, Map<String, String> entities) throws JSONException {
-
-        JSONObject result = new JSONObject();
-
-        result.put("content", tweetContent);
-        result.put("sentiment", sentiment);
-        result.put("entities", new JSONObject(entities));
-
-        return result.toString();
     }
 
 }
