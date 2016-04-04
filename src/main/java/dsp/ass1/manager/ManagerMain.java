@@ -10,10 +10,13 @@ import java.util.HashMap;
 
 public class ManagerMain {
     public static void main(String[] args) throws IOException {
-        HashMap<String, Job> allJobs = new HashMap<String, Job>();
+        System.out.println("Starting manager node");
 
+        HashMap<String, Job> allJobs = new HashMap<String, Job>();
         (new Thread(new PendingJobsHandler(allJobs))).start();
         (new Thread(new FinishedTweetsHandler(allJobs))).start();
+
+        System.out.println("Terminating manager node");
     }
 
     protected static class Auxiliary {
