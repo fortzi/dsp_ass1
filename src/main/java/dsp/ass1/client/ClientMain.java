@@ -7,7 +7,6 @@ import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.util.json.JSONException;
 import com.amazonaws.util.json.JSONObject;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import dsp.ass1.utils.Constants;
 import dsp.ass1.utils.S3Helper;
 import dsp.ass1.utils.SQSHelper;
@@ -18,7 +17,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 /**
- * Created by doubled on 0002, 02, 4, 2016.
+ * Created by doubled
  */
 public class ClientMain {
 
@@ -94,9 +93,10 @@ public class ClientMain {
     }
 
     /**
-     *
-     * @param fileKey the file id of the file that
-     * @return
+     * sending message to the PENDING_JOBS queue stating that new job file
+     * is now available in the PENDING_JOBS folder in s3
+     * @param fileKey the s3 file key of the new input file
+     * @return message id (will be the client id for the rest of the run)
      */
     private String sendNewJobSignal(String fileKey) {
         return sqs.sendMsgToQueue(SQSHelper.Queues.PENDING_JOBS,fileKey);
@@ -161,8 +161,8 @@ public class ClientMain {
     }
 
     /**
-     *
-     * @param file
+     * parsing final merged result file received from the manager into a pretty html file
+     * @param file the result file's s3 key identifier
      * @throws IOException
      * @throws JSONException
      */
@@ -188,6 +188,7 @@ public class ClientMain {
                 case 2: writer.print("Black\">"); break;
                 case 3: writer.print("LightGreen\">"); break;
                 case 4: writer.print("DarkGreen\">"); break;
+                default: writer.print("Pink\">");
             }
 
             writer.print(tweet.getString("content"));

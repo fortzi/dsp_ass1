@@ -35,7 +35,7 @@ public class PendingJobsHandler implements Runnable {
             Message jobMessage = sqs.getMsgFromQueue(SQSHelper.Queues.PENDING_JOBS);
             System.out.println("Found new job");
 
-            if (jobMessage.getAttributes().containsKey(Constants.TERMINATION_MESSAGE)) {
+            if (jobMessage.getMessageAttributes().containsKey(Constants.TERMINATION_MESSAGE)) {
                 System.out.println("Terminating");
                 ManagerMain.Auxiliary.terminate = true;
                 break;
