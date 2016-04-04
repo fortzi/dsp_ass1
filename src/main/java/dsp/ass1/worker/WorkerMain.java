@@ -51,7 +51,11 @@ public class WorkerMain {
         } catch (IOException e) {
             new SQSHelper().sendMsgToQueue(SQSHelper.Queues.DEBUGGING,e.getMessage());
             e.printStackTrace();
+        } catch (Exception e) {
+            new SQSHelper().sendMsgToQueue(SQSHelper.Queues.DEBUGGING,e.getMessage());
+            e.printStackTrace();
         }
+
     }
 
     public WorkerMain() {
@@ -60,10 +64,13 @@ public class WorkerMain {
         tweetsOk = 0;
         tweetsFaulty = 0;
 
-        Properties props = new Properties();
-        props.put("annotators", "tokenize, ssplit, parse, sentiment");
-        sentimentPipeline =  new StanfordCoreNLP(props);
-        NERPipeline =  new StanfordCoreNLP(props);
+        Properties props1 = new Properties();
+        props1.put("annotators", "tokenize, ssplit, parse, sentiment");
+        sentimentPipeline =  new StanfordCoreNLP(props1);
+
+        Properties props2 = new Properties();
+        props2.put("annotators", "tokenize , ssplit, pos, lemma, ner");
+        NERPipeline =  new StanfordCoreNLP(props2);
     }
 
     private void WorkerRun() throws JSONException, IOException {
@@ -74,17 +81,20 @@ public class WorkerMain {
 
         while(true) {
             // look for new job from pending tweets queue
+            System.out.println("Waiting for new message");
             msg = sqs.getMsgFromQueue(SQSHelper.Queues.PENDING_TWEETS, true);
 
             // check whether this is an termination message
-            if (msg.getAttributes().containsKey(Constants.TERMINATION_MESSAGE)) {
+            if (msg.getMessageAttributes().containsKey(Constants.TERMINATION_MESSAGE)) {
                 break;
             }
 
             // if not termination message that this is new tweet to work on !
+            System.out.println("extracting tweet text from url");
             result = new JSONObject();
             tweetText = getTxtFromTweet(msg.getBody());
 
+            System.out.println("analyzing tweet");
             if(tweetText == null) {
                 // tweet parsing from web was failed
                 result.put("content", Constants.HTTP_ERROR + msg.getBody());
@@ -99,11 +109,14 @@ public class WorkerMain {
             }
 
             // pushing final results to the manager via FINISHED TWEETS queue
+            System.out.println("sending results");
             Map<String, String> attributes = new HashMap<String, String>();
-            attributes.put(Constants.JOB_ID_ATTRIBUTE, msg.getAttributes().get(Constants.JOB_ID_ATTRIBUTE));
+            String job_id = msg.getMessageAttributes().get(Constants.JOB_ID_ATTRIBUTE).toString();
+            attributes.put(Constants.JOB_ID_ATTRIBUTE, job_id);
             sqs.sendMsgToQueue(SQSHelper.Queues.FINISHED_TWEETS, result.toString(), attributes);
 
             //now that the tweet analysis has been sent, we can delete original tweet msg from queue
+            System.out.println("removing message from queue");
             sqs.removeMsgFromQueue(SQSHelper.Queues.PENDING_TWEETS, msg);
         }
 
@@ -111,6 +124,7 @@ public class WorkerMain {
         sqs.removeMsgFromQueue(SQSHelper.Queues.PENDING_TWEETS, msg);
 
         // upload statistics.
+        System.out.println("uploading statistics");
         String id = getInstanceId();
         File statistics = createStatisticsFile(id);
         s3.putObject(S3Helper.Folders.STATISTICS, statistics);
@@ -181,6 +195,11 @@ public class WorkerMain {
                 String word = token.get(TextAnnotation.class);
                 // this is the NER label of the token
                 String ne = token.get(NamedEntityTagAnnotation.class);
+
+                if(ne == null) {
+                    System.out.println("null ne for " + word);
+                    continue;
+                }
                 if(ne.matches("PERSON|LOCATION|ORGANIZATION"))
                     entities.put(word, ne);
             }

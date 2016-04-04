@@ -1,10 +1,10 @@
 <component name="ArtifactManager">
-  <artifact build-on-make="true" name="test">
-    <output-path>$PROJECT_DIR$/classes/artifacts/test</output-path>
+  <artifact build-on-make="true" name="worker_test3">
+    <output-path>$PROJECT_DIR$/classes/artifacts/worker_test3</output-path>
     <root id="root">
       <element id="archive" name="dsp-ass1.jar">
         <element id="directory" name="META-INF">
-          <element id="file-copy" path="$PROJECT_DIR$/src/main/java/test/META-INF/MANIFEST.MF" />
+          <element id="file-copy" path="$PROJECT_DIR$/src/main/java/worker_test3/META-INF/MANIFEST.MF" />
         </element>
         <element id="module-output" name="dsp-ass1" />
       </element>
@@ -26,7 +26,9 @@
       <element id="library" level="project" name="Maven: com.amazonaws:aws-java-sdk-importexport:1.9.6" />
       <element id="library" level="project" name="Maven: com.amazonaws:aws-java-sdk-cloudsearch:1.9.6" />
       <element id="library" level="project" name="Maven: com.amazonaws:aws-java-sdk-logs:1.9.6" />
+      <element id="file-copy" path="$USER_HOME$/Downloads/jollyday-0.4.7.jar" />
       <element id="library" level="project" name="Maven: com.amazonaws:aws-java-sdk-lambda:1.9.6" />
+      <element id="file-copy" path="$USER_HOME$/Downloads/ejml-0.23.jar" />
       <element id="library" level="project" name="Maven: com.amazonaws:aws-java-sdk-support:1.9.6" />
       <element id="library" level="project" name="Maven: com.amazonaws:aws-java-sdk-cognitoidentity:1.9.6" />
       <element id="library" level="project" name="Maven: com.amazonaws:aws-java-sdk-simpledb:1.9.6" />
@@ -41,6 +43,7 @@
       <element id="library" level="project" name="Maven: com.amazonaws:aws-java-sdk-sns:1.9.6" />
       <element id="library" level="project" name="Maven: com.amazonaws:aws-java-sdk-route53:1.9.6" />
       <element id="library" level="project" name="Maven: com.amazonaws:aws-java-sdk-elasticbeanstalk:1.9.6" />
+      <element id="file-copy" path="$USER_HOME$/Downloads/stanford-corenlp-3.3.0.jar" />
       <element id="library" level="project" name="Maven: com.amazonaws:aws-java-sdk-cloudfront:1.9.6" />
       <element id="file-copy" path="$USER_HOME$/Downloads/jsoup-1.8.3.jar" />
       <element id="library" level="project" name="Maven: com.amazonaws:aws-java-sdk-autoscaling:1.9.6" />
@@ -48,6 +51,7 @@
       <element id="library" level="project" name="Maven: com.amazonaws:aws-java-sdk-sqs:1.9.6" />
       <element id="library" level="project" name="Maven: org.apache.httpcomponents:httpclient:4.3" />
       <element id="library" level="project" name="Maven: commons-codec:commons-codec:1.6" />
+      <element id="file-copy" path="$USER_HOME$/Downloads/stanford-corenlp-3.3.0-models.jar" />
       <element id="library" level="project" name="Maven: com.amazonaws:aws-java-sdk-sts:1.9.6" />
       <element id="library" level="project" name="Maven: com.amazonaws:aws-java-sdk-emr:1.9.6" />
       <element id="library" level="project" name="Maven: com.amazonaws:aws-java-sdk-ses:1.9.6" />

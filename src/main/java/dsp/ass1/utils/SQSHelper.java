@@ -29,7 +29,9 @@ public class SQSHelper {
         SendMessageRequest sendRequest = new SendMessageRequest(queueUrl, msg);
 
         for(String key : att.keySet()) {
-            sendRequest.addMessageAttributesEntry(key, new MessageAttributeValue().withStringValue(att.get(key)).withDataType("String"));
+            sendRequest.addMessageAttributesEntry(key, new MessageAttributeValue()
+                                                            .withStringValue(att.get(key))
+                                                            .withDataType("String"));
         }
 
         SendMessageResult sendResult = sqs.sendMessage(sendRequest);
@@ -55,6 +57,7 @@ public class SQSHelper {
         String queueUrl = sqs.getQueueUrl(queue.toString()).getQueueUrl();
         ReceiveMessageRequest receiveRequest = new ReceiveMessageRequest(queueUrl);
 
+        receiveRequest.withMessageAttributeNames("All");
         receiveRequest.withMaxNumberOfMessages(1);
 
         do {
