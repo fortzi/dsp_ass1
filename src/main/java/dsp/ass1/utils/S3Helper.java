@@ -55,6 +55,10 @@ public class S3Helper {
         return result.toString();
     }
 
+    public void removeObject(S3Object s3Object) {
+        s3.deleteObject(s3Object.getBucketName(), s3Object.getKey());
+    }
+
     /**
      * The available folders in the bucket.
      */

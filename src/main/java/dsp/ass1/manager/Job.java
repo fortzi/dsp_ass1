@@ -35,6 +35,7 @@ public class Job {
 
     public int addResult(String result) {
         results.println(result);
+        results.flush();
         return --remainingUrls;
     }
 

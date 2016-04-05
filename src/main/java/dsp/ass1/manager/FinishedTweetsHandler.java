@@ -46,6 +46,7 @@ public class FinishedTweetsHandler implements Runnable {
             Job job = allJobs.get(jobId);
             try {
                 job.addResult(tweetResult);
+                sqs.removeMsgFromQueue(SQSHelper.Queues.PENDING_JOBS, tweetMessage);
             } catch (NullPointerException e) {
                 System.err.println("Job " + jobId + " unknown.");
                 return;

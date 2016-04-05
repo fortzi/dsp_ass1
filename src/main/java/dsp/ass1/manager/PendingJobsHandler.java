@@ -1,5 +1,6 @@
 package dsp.ass1.manager;
 
+import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.sqs.model.Message;
 import dsp.ass1.utils.Constants;
 import dsp.ass1.utils.InstanceFactory;
@@ -44,11 +45,14 @@ public class PendingJobsHandler implements Runnable {
 
             String jobObjectKey = jobMessage.getBody();
             Job job;
+            S3Object jobObject;
 
             try {
                 System.out.println("Retrieving job contents from S3");
-                String rawJob = S3Helper.getStringFromInputStream(s3.getObject(jobObjectKey).getObjectContent());
+                jobObject = s3.getObject(jobObjectKey);
+                String rawJob = S3Helper.getStringFromInputStream(jobObject.getObjectContent());
                 job = new Job(rawJob.split("\n"), jobMessage.getMessageId());
+                s3.removeObject(jobObject);
             } catch (IOException e) {
                 System.err.println("Error with job: " + jobObjectKey);
                 e.printStackTrace();
