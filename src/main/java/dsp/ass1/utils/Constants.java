@@ -17,3 +17,7 @@ public class Constants {
     public final static String  BUCKET_NAME         = "dsp-ass1";
     public final static String  HTTP_ERROR          = "404 error ! cannot access to tweet ";
 }
+
+//TODO add function to send N number of messages at the same time (for termination, for tweets)
+//TODO add all jars to AMI
+//TODO maybe change to one project jar ?
