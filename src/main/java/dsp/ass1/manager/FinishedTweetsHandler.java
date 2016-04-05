@@ -42,8 +42,14 @@ public class FinishedTweetsHandler implements Runnable {
 
             System.out.println("Found a tweet results");
             String tweetResult = tweetMessage.getBody();
-            Job job = allJobs.get(tweetMessage.getAttributes().get(Constants.JOB_ID_ATTRIBUTE));
-            job.addResult(tweetResult);
+            String jobId = tweetMessage.getMessageAttributes().get(Constants.JOB_ID_ATTRIBUTE).getStringValue();
+            Job job = allJobs.get(jobId);
+            try {
+                job.addResult(tweetResult);
+            } catch (NullPointerException e) {
+                System.err.println("Job " + jobId + " unknown.");
+                return;
+            }
 
             if (!job.isComplete()) {
                 continue;
