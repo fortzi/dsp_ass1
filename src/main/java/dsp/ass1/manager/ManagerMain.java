@@ -20,9 +20,10 @@ public class ManagerMain {
         finishedJobsHandler.start();
 
         try {
-            pendingJobsHandler.join();
             finishedJobsHandler.join();
+            pendingJobsHandler.interrupt();
         } catch (InterruptedException e) {
+            System.err.println("Threads interrupted.");
             e.printStackTrace();
         }
 
