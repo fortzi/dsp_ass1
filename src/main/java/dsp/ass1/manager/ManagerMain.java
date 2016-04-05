@@ -13,8 +13,18 @@ public class ManagerMain {
         System.out.println("Starting manager node");
 
         HashMap<String, Job> allJobs = new HashMap<String, Job>();
-        (new Thread(new PendingJobsHandler(allJobs))).start();
-        (new Thread(new FinishedTweetsHandler(allJobs))).start();
+        Thread pendingJobsHandler = new Thread(new PendingJobsHandler(allJobs));
+        Thread finishedJobsHandler = new Thread(new FinishedTweetsHandler(allJobs));
+
+        pendingJobsHandler.start();
+        finishedJobsHandler.start();
+
+        try {
+            pendingJobsHandler.join();
+            finishedJobsHandler.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         System.out.println("Terminating manager node");
     }
