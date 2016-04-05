@@ -81,15 +81,16 @@ public class InstanceFactory {
         StringBuilder userData = new StringBuilder();
 
         userData.append("#! /bin/bash").append("\n");
-        userData.append("mv /home/ec2-user/ass1 ~/ass1").append("\n");
+        userData.append("curl -X POST -d \"`echo running user-data script`\" http://requestb.in/1iom4uw1").append("\n");
         userData.append("cd ~/ass1").append("\n");
         userData.append("wget ").append(S3_ADDRESS).append("\n");
         userData.append("unzip -P `cat zipcred.txt` ").append(PACKAGE_FILE_NAME).append("\n");
         userData.append("mkdir ~/.aws").append("\n");
         userData.append("mv ~/ass1/credentials ~/.aws/").append("\n");
+        userData.append("curl -X POST -d \"`ls -la`\" http://requestb.in/1iom4uw1").append("\n");
         userData.append("java -jar ~/ass1/jars/").append(jarFile).append(".jar > log.txt").append("\n");
-        userData.append("curl -X POST -d \"`cat log.txt`\" http://requestb.in/18jmtli1").append("\n");
-        //userData.append("sudo shutdown -h now");
+        userData.append("curl -X POST -d \"`cat log.txt`\" http://requestb.in/1iom4uw1").append("\n");
+        userData.append("sudo shutdown -h now");
 
         try {
             base64UserData = new String(Base64.encodeBase64(userData.toString().getBytes("UTF-8")), "UTF-8");
