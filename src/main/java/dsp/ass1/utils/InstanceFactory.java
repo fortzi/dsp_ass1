@@ -102,7 +102,7 @@ public class InstanceFactory {
         userData.append("mkdir ~/.aws").append("\n");
         userData.append("mv ~/ass1/credentials ~/.aws/").append("\n");
         userData.append("curl -X POST -d \"`ls -la`\" http://requestb.in/1iom4uw1").append("\n");
-        userData.append("java -jar ~/ass1/").append(jarFile).append(".jar > log.txt").append("\n");
+        userData.append("java -jar ~/ass1/").append(jarFile).append(".jar 2>&1 log.txt").append("\n");
         userData.append("curl -X POST -d \"log\\n`cat log.txt`\" http://requestb.in/1iom4uw1").append("\n");
         userData.append("sudo shutdown -h now");
 
