@@ -16,6 +16,8 @@ public class Constants {
     public final static String  JOB_ID_ATTRIBUTE    = "job_id";
     public final static String  BUCKET_NAME         = "dsp-ass1";
     public final static String  HTTP_ERROR          = "404 error ! cannot access to tweet ";
+    public final static String  HTTP_ERROR          = "404 error ! cannot access to tweet ";
+    public final static String  HTTP_ERROR          = "404 error ! cannot access to tweet ";
 }
 
 //TODO add function to send N number of messages at the same time (for termination, for tweets)

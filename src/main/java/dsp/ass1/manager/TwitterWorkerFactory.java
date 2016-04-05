@@ -9,6 +9,6 @@ import dsp.ass1.utils.InstanceFactory;
 
 public class TwitterWorkerFactory extends InstanceFactory {
     public TwitterWorkerFactory() {
-        super("hello-world");
+        super("worker");
     }
 }
