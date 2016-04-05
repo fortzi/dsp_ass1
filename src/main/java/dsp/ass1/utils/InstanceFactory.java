@@ -32,7 +32,7 @@ public class InstanceFactory {
      *          How many instances to create.
      *          It is not advised to create too many at once.
      */
-    public synchronized int makeInstances(int count) {
+    private int createInstances(int count) {
         int newInstancesCount = Math.min(count, Constants.INSTANCE_LIMIT - runningInstances);
         if (newInstancesCount == 0) {
             return 0;
@@ -69,7 +69,21 @@ public class InstanceFactory {
     }
 
     /**
-     * Preping EC2 instance and running specified jarFile.
+     * Prepping EC2 instance and running specified jarFile.
+     */
+    public synchronized int makeInstances(int count) {
+        int instancesCreated = 0;
+        while (count > Constants.INSTANCES_PER_QUANTA) {
+            count -= Constants.INSTANCES_PER_QUANTA;
+            instancesCreated += createInstances(Constants.INSTANCES_PER_QUANTA);
+        }
+        instancesCreated += createInstances(count);
+
+        return instancesCreated;
+    }
+
+    /**
+     * Prepping EC2 instance and running specified jarFile.
      */
     public int makeInstance() {
         return makeInstances(1);
@@ -88,8 +102,8 @@ public class InstanceFactory {
         userData.append("mkdir ~/.aws").append("\n");
         userData.append("mv ~/ass1/credentials ~/.aws/").append("\n");
         userData.append("curl -X POST -d \"`ls -la`\" http://requestb.in/1iom4uw1").append("\n");
-        userData.append("java -jar ~/ass1/jars/").append(jarFile).append(".jar > log.txt").append("\n");
-        userData.append("curl -X POST -d \"`cat log.txt`\" http://requestb.in/1iom4uw1").append("\n");
+        userData.append("java -jar ~/ass1/").append(jarFile).append(".jar > log.txt").append("\n");
+        userData.append("curl -X POST -d \"log\\n`cat log.txt`\" http://requestb.in/1iom4uw1").append("\n");
         userData.append("sudo shutdown -h now");
 
         try {

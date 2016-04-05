@@ -67,8 +67,10 @@ public class PendingJobsHandler implements Runnable {
             int newWorkersCount = messageCount / Constants.TWEETS_PER_WORKER - ManagerMain.Auxiliary.workerCount;
 
             if (newWorkersCount > 0) {
-                System.out.println("Creating " + newWorkersCount + " new workers");
-                ManagerMain.Auxiliary.workerCount += workerFactory.makeInstances(newWorkersCount);
+                System.out.println("Trying to create " + newWorkersCount + " new workers");
+                newWorkersCount = workerFactory.makeInstances(newWorkersCount);
+                ManagerMain.Auxiliary.workerCount += newWorkersCount;
+                System.out.println("Created " + newWorkersCount + " new workers");
             }
 
             System.out.println("Removing job from SQS queue");
