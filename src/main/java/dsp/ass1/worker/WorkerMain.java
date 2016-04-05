@@ -111,7 +111,7 @@ public class WorkerMain {
             // pushing final results to the manager via FINISHED TWEETS queue
             System.out.println("sending results");
             Map<String, String> attributes = new HashMap<String, String>();
-            String job_id = msg.getMessageAttributes().get(Constants.JOB_ID_ATTRIBUTE).toString();
+            String job_id = msg.getMessageAttributes().get(Constants.JOB_ID_ATTRIBUTE).getStringValue();
             attributes.put(Constants.JOB_ID_ATTRIBUTE, job_id);
             sqs.sendMsgToQueue(SQSHelper.Queues.FINISHED_TWEETS, result.toString(), attributes);
 

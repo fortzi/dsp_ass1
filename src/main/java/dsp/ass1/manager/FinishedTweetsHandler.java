@@ -44,6 +44,7 @@ public class FinishedTweetsHandler implements Runnable {
             String tweetResult = tweetMessage.getBody();
             String jobId = tweetMessage.getMessageAttributes().get(Constants.JOB_ID_ATTRIBUTE).getStringValue();
             Job job = allJobs.get(jobId);
+
             try {
                 job.addResult(tweetResult);
                 sqs.removeMsgFromQueue(SQSHelper.Queues.PENDING_JOBS, tweetMessage);
