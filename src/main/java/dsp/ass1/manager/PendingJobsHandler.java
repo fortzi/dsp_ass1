@@ -2,6 +2,7 @@ package dsp.ass1.manager;
 
 import com.amazonaws.services.sqs.model.Message;
 import dsp.ass1.utils.Constants;
+import dsp.ass1.utils.InstanceFactory;
 import dsp.ass1.utils.S3Helper;
 import dsp.ass1.utils.SQSHelper;
 
@@ -17,13 +18,13 @@ public class PendingJobsHandler implements Runnable {
     S3Helper s3;
     SQSHelper sqs;
     Map<String, Job> allJobs;
-    TwitterWorkerFactory workerFactory;
+    InstanceFactory workerFactory;
 
     public PendingJobsHandler(Map<String, Job> allJobs) {
         this.s3 = new S3Helper();
         this.sqs = new SQSHelper();
         this.allJobs = allJobs;
-        this.workerFactory = new TwitterWorkerFactory();
+        this.workerFactory = new InstanceFactory(Constants.INSTANCE_WORKER);
     }
 
     public void run() {

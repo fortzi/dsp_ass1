@@ -8,6 +8,7 @@ import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.util.json.JSONException;
 import com.amazonaws.util.json.JSONObject;
 import dsp.ass1.utils.Constants;
+import dsp.ass1.utils.InstanceFactory;
 import dsp.ass1.utils.S3Helper;
 import dsp.ass1.utils.SQSHelper;
 
@@ -126,7 +127,7 @@ public class ClientMain {
     private boolean createManager() {
 
         System.out.println("Creating manager !");
-        new ManagerFactory().makeInstance();
+        new InstanceFactory(Constants.INSTANCE_MANAGER).makeInstance();
         System.out.println("Manager Created !");
 
         return true;

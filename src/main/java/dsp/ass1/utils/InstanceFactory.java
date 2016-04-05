@@ -22,7 +22,7 @@ public class InstanceFactory {
     static int runningInstances = 0;
     String jarFileName = null;
 
-    protected InstanceFactory(String jarFileName) {
+    public InstanceFactory(String jarFileName) {
         this.jarFileName = jarFileName;
     }
 
