@@ -74,7 +74,7 @@ public class PendingJobsHandler implements Runnable {
             }
 
 
-            if (jobMessage.getMessageAttributes().containsKey(Constants.TERMINATION_MESSAGE)) {
+            if (jobMessage.getMessageAttributes().containsKey(Constants.TERMINATION_ATTRIBUTE)) {
                 System.out.println("Terminating");
                 ManagerMain.Auxiliary.terminate = true;
             }

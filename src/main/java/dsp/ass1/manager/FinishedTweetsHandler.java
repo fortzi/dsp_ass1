@@ -72,7 +72,7 @@ public class FinishedTweetsHandler implements Runnable {
             if (allJobs.isEmpty() && ManagerMain.Auxiliary.terminate) {
                 System.out.println("Sending termination messages to " + ManagerMain.Auxiliary.workerCount + " workers");
                 attributes = new HashMap<String, String>();
-                attributes.put(Constants.TERMINATION_MESSAGE, "true");
+                attributes.put(Constants.TERMINATION_ATTRIBUTE, "true");
 
                 while (ManagerMain.Auxiliary.workerCount-- > 0) {
                     sqs.sendMsgToQueue(SQSHelper.Queues.PENDING_TWEETS, "Termination message", attributes);

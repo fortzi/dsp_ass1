@@ -85,7 +85,7 @@ public class WorkerMain {
             msg = sqs.getMsgFromQueue(SQSHelper.Queues.PENDING_TWEETS, true);
 
             // check whether this is an termination message
-            if (msg.getMessageAttributes().containsKey(Constants.TERMINATION_MESSAGE)) {
+            if (msg.getMessageAttributes().containsKey(Constants.TERMINATION_ATTRIBUTE)) {
                 break;
             }
 

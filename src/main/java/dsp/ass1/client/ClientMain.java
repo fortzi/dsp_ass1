@@ -99,7 +99,7 @@ public class ClientMain {
         Map<String,String> atts = new HashMap<String, String>();
 
         if(terminate)
-            atts.put(Constants.TERMINATION_MESSAGE,"true");
+            atts.put(Constants.TERMINATION_ATTRIBUTE,"true");
 
         return sqs.sendMsgToQueue(SQSHelper.Queues.PENDING_JOBS, fileKey, atts);
 
