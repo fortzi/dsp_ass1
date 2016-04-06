@@ -7,6 +7,7 @@ import dsp.ass1.utils.InstanceFactory;
 import dsp.ass1.utils.S3Helper;
 import dsp.ass1.utils.SQSHelper;
 
+import javax.print.DocFlavor;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -78,9 +79,26 @@ public class PendingJobsHandler implements Runnable {
                 System.out.println("Terminating");
                 ManagerMain.Auxiliary.terminate = true;
             }
-            
+
             System.out.println("Removing job from SQS queue");
             sqs.removeMsgFromQueue(SQSHelper.Queues.PENDING_JOBS, jobMessage);
+        }
+
+        while (!allJobs.isEmpty()) {
+            Message message = sqs.getMsgFromQueue(SQSHelper.Queues.PENDING_JOBS, false);
+
+            if (message != null) {
+                String jobId = message.getMessageId();
+                sqs.removeMsgFromQueue(SQSHelper.Queues.PENDING_JOBS, message);
+                Map<String, String> attributes = new HashMap<String, String>();
+                attributes.put(Constants.REFUSE_ATTRIBUTE, "true");
+                sqs.sendMsgToQueue(SQSHelper.Queues.FINISHED_JOBS, "Message refused.", attributes);
+            }
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 }

@@ -68,6 +68,11 @@ public class SQSHelper {
 
         do {
             messages = sqs.receiveMessage(receiveRequest).getMessages();
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         } while(messages.size() == 0 && wait);
 
         if(messages.size() == 0)
