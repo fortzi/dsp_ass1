@@ -173,32 +173,66 @@ public class ClientMain {
      * @throws JSONException
      */
     private void parseResultsFile(String file) throws IOException, JSONException {
-
         String line;
         JSONObject tweet, entities;
-
-        PrintWriter writer = new PrintWriter("finalOutput.html");
-        writer.println("<html>");
-        writer.println("<body>");
-
         InputStream stream = s3.getObject(file).getObjectContent();
         BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
 
+        PrintWriter writer = new PrintWriter("finalOutput.html");
+        writer.println(
+                "<html>\n" +
+                "<head>\n" +
+                "<style>");
+        writer.println(
+                "body { font-family: Arial; }\n" +
+                "\n" +
+                "\t#tweetsTable { border: 1px solid #CCC; }\n" +
+                "\t#tweetsTable tr:nth-child(odd)  { background: #F9F9F9; }\n" +
+                "\t#tweetsTable tr:nth-child(even) { background: #EEE; }\n" +
+                "\t#tweetsTable td:nth-child(odd)  {\n" +
+                "\t\tborder-right: 1px solid #CCC;\n" +
+                "\t\twidth: 70%;\n" +
+                "\t}\n" +
+                "\t#tweetsTable tr.header td {\n" +
+                "\t\tborder-bottom: 1px solid #CCC;\n" +
+                "\t\tfont-weight: bold;\n" +
+                "\t}\n" +
+                "\t#tweetsTable td {\n" +
+                "\t\tpadding: 10px;\n" +
+                "\t\ttext-align: left;\n" +
+                "\t\tvertical-align: top;\n" +
+                "\t}\n" +
+                "\t\n" +
+                "\t.tweet\t\t { color: pink; }\n" +
+                "\t.sentiment-0 { color: darkred; }\n" +
+                "\t.sentiment-1 { color: red; }\n" +
+                "\t.sentiment-2 { color: black; }\n" +
+                "\t.sentiment-3 { color: lightgreen; }\n" +
+                "\t.sentiment-4 { color: darkgreen; }\n" +
+                "\t\n" +
+                "\t.entities ul {\n" +
+                "\t\tlist-style-type: none;\n" +
+                "\t\tpadding: 0px;\n" +
+                "\t}\n");
+        writer.println(
+                "</style>\n" +
+                "</head>\n" +
+                "<body>\n" +
+                "\t<table id=\"tweetsTable\" cellspacing=\"0\">\n" +
+                "\t\t<tr class=\"header\">\n" +
+                "\t\t\t<td>Tweets</td>\n" +
+                "\t\t\t<td>Entities</td>\n" +
+                "\t\t</tr>");
+
         while((line = reader.readLine()) != null) {
             tweet = new JSONObject(line);
-
-            writer.print("<p><b><font color=\"");
-            switch (tweet.getInt("sentiment")) {
-                case 0: writer.print("DarkRed\">"); break;
-                case 1: writer.print("Red\">"); break;
-                case 2: writer.print("Black\">"); break;
-                case 3: writer.print("LightGreen\">"); break;
-                case 4: writer.print("DarkGreen\">"); break;
-                default: writer.print("Pink\">");
-            }
-
-            writer.print(tweet.getString("content"));
-            writer.print("</font></b>");
+            writer.println(
+                    "<tr>\n" +
+                    "\t\t\t<td class=\"tweet sentiment-" + tweet.getInt("sentiment") + "\">" +
+                    tweet.getString("content") +
+                    "</td>\n" +
+                    "\t\t\t<td class=\"entities\">\n" +
+                    "\t\t\t\t<ul>\n");
 
             entities = tweet.getJSONObject("entities");
             Iterator<?> keys = entities.keys();
@@ -206,16 +240,19 @@ public class ClientMain {
             while( keys.hasNext() ){
                 String key = (String)keys.next();
                 String value = entities.getString(key);
-                writer.print("<br>" + key + " = " + value);
+                writer.println("\t\t\t\t\t<li>" + key +" = " + value + "</li>");
             }
 
-            writer.print("</p>\n");
+            writer.println("\t\t\t\t</ul>\n" +
+                    "\t\t\t</td>\n" +
+                    "\t\t</tr>");
         }
 
-        writer.println("</body>");
-        writer.println("</html>");
+        writer.println(
+                "\t</table>\n" +
+                "</body>\n" +
+                "<html>");
 
         writer.close();
     }
-
 }
