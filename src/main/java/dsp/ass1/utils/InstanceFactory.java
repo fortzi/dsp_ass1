@@ -111,6 +111,7 @@ public class InstanceFactory {
                     e.printStackTrace();
 
                     try {
+                        // Don't busy wait too intensely
                         Thread.sleep(500);
                     } catch (InterruptedException e1) {
                         e1.printStackTrace();

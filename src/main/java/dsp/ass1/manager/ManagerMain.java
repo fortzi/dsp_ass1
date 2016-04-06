@@ -21,7 +21,7 @@ public class ManagerMain {
 
         try {
             finishedJobsHandler.join();
-            pendingJobsHandler.interrupt();
+            pendingJobsHandler.join();
         } catch (InterruptedException e) {
             System.err.println("Threads interrupted.");
             e.printStackTrace();

@@ -62,20 +62,16 @@ public class FinishedTweetsHandler implements Runnable {
             String finishedJobObjectKey = s3.putObject(S3Helper.Folders.FINISHED_JOBS, results);
 
             System.out.println("Sending job results message to SQS");
-            Map<String, String> attributes = new HashMap<String, String>();
-            attributes.put(Constants.JOB_ID_ATTRIBUTE, job.getId());
-            sqs.sendMsgToQueue(SQSHelper.Queues.FINISHED_JOBS, finishedJobObjectKey, attributes);
+            sqs.sendMsgToQueue(SQSHelper.Queues.FINISHED_JOBS, finishedJobObjectKey, job.getId());
 
             job.close();
             allJobs.remove(job.getId());
 
             if (allJobs.isEmpty() && ManagerMain.Auxiliary.terminate) {
                 System.out.println("Sending termination messages to " + ManagerMain.Auxiliary.workerCount + " workers");
-                attributes = new HashMap<String, String>();
-                attributes.put(Constants.TERMINATION_ATTRIBUTE, "true");
 
                 while (ManagerMain.Auxiliary.workerCount-- > 0) {
-                    sqs.sendMsgToQueue(SQSHelper.Queues.PENDING_TWEETS, "Termination message", attributes);
+                    sqs.sendMsgToQueue(SQSHelper.Queues.PENDING_TWEETS, "Termination message", Constants.TERMINATION_ATTRIBUTE);
                 }
 
                 break;

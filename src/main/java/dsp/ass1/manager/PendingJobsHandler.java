@@ -90,11 +90,11 @@ public class PendingJobsHandler implements Runnable {
             if (message != null) {
                 String jobId = message.getMessageId();
                 sqs.removeMsgFromQueue(SQSHelper.Queues.PENDING_JOBS, message);
-                Map<String, String> attributes = new HashMap<String, String>();
-                attributes.put(Constants.REFUSE_ATTRIBUTE, "true");
-                sqs.sendMsgToQueue(SQSHelper.Queues.FINISHED_JOBS, "Message refused.", attributes);
+                sqs.sendMsgToQueue(SQSHelper.Queues.FINISHED_JOBS, "Message refused.", Constants.REFUSE_ATTRIBUTE);
             }
+
             try {
+                // Don't busy wait too intensely
                 Thread.sleep(500);
             } catch (InterruptedException e) {
                 e.printStackTrace();
