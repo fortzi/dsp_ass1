@@ -27,6 +27,28 @@ public class InstanceFactory {
     }
 
     /**
+     * Prepping EC2 instance and running specified jarFile.
+     */
+    public int makeInstance() {
+        return makeInstances(1);
+    }
+
+    /**
+     * Prepping EC2 instance and running specified jarFile.
+     */
+    public synchronized int makeInstances(int count) {
+        int instancesCreated = 0;
+
+        while (count > Constants.INSTANCES_PER_QUANTA) {
+            count -= Constants.INSTANCES_PER_QUANTA;
+            instancesCreated += createInstances(Constants.INSTANCES_PER_QUANTA);
+        }
+
+        instancesCreated += createInstances(count);
+        return instancesCreated;
+    }
+
+    /**
      * Preping EC2 instance and running specified jarFile.
      * @param count
      *          How many instances to create.
@@ -34,7 +56,7 @@ public class InstanceFactory {
      */
     private int createInstances(int count) {
         int newInstancesCount = Math.min(count, Constants.INSTANCE_LIMIT - runningInstances);
-        if (newInstancesCount == 0) {
+        if (newInstancesCount <= 0) {
             return 0;
         }
 
@@ -63,49 +85,39 @@ public class InstanceFactory {
         }
 
         List<Instance> instances = runInstancesResult.getReservation().getInstances();
+        tagInstances(amazonEC2Client, instances, jarFileName);
 
         // counting how instances were really created
         runningInstances += instances.size();
+        return instances.size();
+    }
 
-        // Adding Tags
+    private void tagInstances(AmazonEC2Client client, List<Instance> instances, String tag) {
         for (Instance instance : instances) {
             CreateTagsRequest createTagsRequest = new CreateTagsRequest();
             createTagsRequest.withResources(instance.getInstanceId())
-                    .withTags(new Tag("Type", jarFileName));
+                    .withTags(new Tag("Type", tag));
 
             // sometimes instances creating too slow and while this code is running
             // the instance is not listed yet
-            try {
-                amazonEC2Client.createTags(createTagsRequest);
-            }
-            catch (Exception e) {
-                System.out.println("cannt tag instance !");
-                e.printStackTrace();
+            int tries = 10;
+            while (tries-- > 0) {
+                try {
+                    client.createTags(createTagsRequest);
+                    break;
+                }
+                catch (Exception e) {
+                    System.err.println("can't tag instance " + instance.getInstanceId() + ", trying " + tries + " more times.");
+                    e.printStackTrace();
+
+                    try {
+                        Thread.sleep(500);
+                    } catch (InterruptedException e1) {
+                        e1.printStackTrace();
+                    }
+                }
             }
         }
-
-        return newInstancesCount;
-    }
-
-    /**
-     * Prepping EC2 instance and running specified jarFile.
-     */
-    public synchronized int makeInstances(int count) {
-        int instancesCreated = 0;
-        while (count > Constants.INSTANCES_PER_QUANTA) {
-            count -= Constants.INSTANCES_PER_QUANTA;
-            instancesCreated += createInstances(Constants.INSTANCES_PER_QUANTA);
-        }
-        instancesCreated += createInstances(count);
-
-        return instancesCreated;
-    }
-
-    /**
-     * Prepping EC2 instance and running specified jarFile.
-     */
-    public int makeInstance() {
-        return makeInstances(1);
     }
 
     // returning user data in BASE64 format
@@ -121,7 +133,7 @@ public class InstanceFactory {
         userData.append("mkdir ~/.aws").append("\n");
         userData.append("mv ~/ass1/credentials ~/.aws/").append("\n");
         userData.append("curl -X POST -d \"starting " + jarFile + "\" http://requestb.in/1iom4uw1").append("\n");
-        userData.append("java -Xmx700m -jar ~/ass1/").append(jarFile).append(".jar > log.txt").append("\n");
+        userData.append("java -Xmx700m -jar ~/ass1/").append(jarFile).append(".jar > log.txt 2>&1").append("\n");
         userData.append("curl -X POST -d \"log for " + jarFile + "<br> `cat log.txt`\" http://requestb.in/1iom4uw1").append("\n");
         userData.append("sudo shutdown -h now");
 

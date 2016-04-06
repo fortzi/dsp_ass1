@@ -32,16 +32,10 @@ public class PendingJobsHandler implements Runnable {
         System.out.println("Starting pending jobs handler");
         ManagerMain.Auxiliary.workerCount = 0;
 
-        while (true) {
+        while (ManagerMain.Auxiliary.terminate) {
             System.out.println("Waiting for jobs");
             Message jobMessage = sqs.getMsgFromQueue(SQSHelper.Queues.PENDING_JOBS);
             System.out.println("Found new job");
-
-            if (jobMessage.getMessageAttributes().containsKey(Constants.TERMINATION_MESSAGE)) {
-                System.out.println("Terminating");
-                ManagerMain.Auxiliary.terminate = true;
-                break;
-            }
 
             sqs.extendMessageVisibility(SQSHelper.Queues.PENDING_JOBS, jobMessage);
 
@@ -79,6 +73,12 @@ public class PendingJobsHandler implements Runnable {
                 System.out.println("Created " + newWorkersCount + " new workers");
             }
 
+
+            if (jobMessage.getMessageAttributes().containsKey(Constants.TERMINATION_MESSAGE)) {
+                System.out.println("Terminating");
+                ManagerMain.Auxiliary.terminate = true;
+            }
+            
             System.out.println("Removing job from SQS queue");
             sqs.removeMsgFromQueue(SQSHelper.Queues.PENDING_JOBS, jobMessage);
         }
