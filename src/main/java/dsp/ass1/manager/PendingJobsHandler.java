@@ -32,7 +32,7 @@ public class PendingJobsHandler implements Runnable {
         System.out.println("Starting pending jobs handler");
         ManagerMain.Auxiliary.workerCount = 0;
 
-        while (ManagerMain.Auxiliary.terminate) {
+        while (!ManagerMain.Auxiliary.terminate) {
             System.out.println("Waiting for jobs");
             Message jobMessage = sqs.getMsgFromQueue(SQSHelper.Queues.PENDING_JOBS);
             System.out.println("Found new job");
