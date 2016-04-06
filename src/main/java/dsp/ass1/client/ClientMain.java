@@ -43,7 +43,6 @@ public class ClientMain {
         s3 = new S3Helper();
     }
 
-
     private void clientRun(boolean terminate, String fileName) {
 
 
@@ -62,22 +61,14 @@ public class ClientMain {
         System.out.println("file was uploaded successfully with key: " + inputFileKey);
 
         System.out.println("sending newJobSignal to SQS");
-        String myId = sendNewJobSignal(inputFileKey);
+        String myId = sendNewJobSignal(inputFileKey, terminate);
         System.out.println("message sent successfully");
 
         System.out.println("my id: " + myId);
 
-        if(terminate) {
-            System.out.println("sending termination message");
-            sendTeminateSignal();
-            System.out.println("termination message sent successfully");
-        }
-
         System.out.println("waiting for job to finish");
         String resultFileKey = waitAndGetResultsFile(myId);
         System.out.println("job finished !");
-
-
 
         System.out.println("parsing file");
         try {
@@ -90,17 +81,28 @@ public class ClientMain {
             e.printStackTrace();
         }
 
-        System.out.println("parsing completed, goodbye !");
+        System.out.println("parsing completed, removing file");
+        System.out.println();
+        s3.removeObject(resultFileKey);
+        System.out.println("finished. goodbye !");
     }
 
     /**
      * sending message to the PENDING_JOBS queue stating that new job file
      * is now available in the PENDING_JOBS folder in s3
      * @param fileKey the s3 file key of the new input file
+     * @param terminate indicating if this should also be termination message
      * @return message id (will be the client id for the rest of the run)
      */
-    private String sendNewJobSignal(String fileKey) {
-        return sqs.sendMsgToQueue(SQSHelper.Queues.PENDING_JOBS,fileKey);
+    private String sendNewJobSignal(String fileKey, boolean terminate) {
+
+        Map<String,String> atts = new HashMap<String, String>();
+
+        if(terminate)
+            atts.put(Constants.TERMINATION_MESSAGE,"true");
+
+        return sqs.sendMsgToQueue(SQSHelper.Queues.PENDING_JOBS, fileKey, atts);
+
     }
 
     /**
@@ -116,12 +118,6 @@ public class ClientMain {
 
     private String sendInputFile(String fileName) {
         return s3.putObject(S3Helper.Folders.PENDING_JOBS, new File(fileName));
-    }
-
-    private void sendTeminateSignal() {
-        Map<String,String> atts = new HashMap<String, String>();
-        atts.put(Constants.TERMINATION_MESSAGE,"true");
-        sqs.sendMsgToQueue(SQSHelper.Queues.PENDING_JOBS, "Termination messages !!", atts);
     }
 
     private boolean createManager() {
