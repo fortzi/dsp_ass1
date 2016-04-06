@@ -38,6 +38,12 @@ public class SQSHelper {
         return sendResult.getMessageId();
     }
 
+    public String sendMsgToQueue(Queues queue, String msg, String attributeKey) {
+        Map<String,String> atts = new HashMap<String, String>();
+        atts.put(attributeKey,"true");
+        return sendMsgToQueue(queue, msg, atts);
+    }
+
     public int getMsgCount(Queues queue) {
         String queueUrl = sqs.getQueueUrl(queue.toString()).getQueueUrl();
         GetQueueAttributesRequest attributesRequest = new GetQueueAttributesRequest();

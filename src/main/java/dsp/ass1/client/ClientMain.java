@@ -68,9 +68,14 @@ public class ClientMain {
 
         System.out.println("waiting for job to finish");
         String resultFileKey = waitAndGetResultsFile(myId);
-        System.out.println("job finished !");
 
-        System.out.println("parsing file");
+        if(resultFileKey == null) {
+            System.out.println("job refused ! manager not accepting any more jobs");
+            System.out.println("please try again later.");
+            return;
+        }
+
+        System.out.println("job finished ! parsing results file.");
         try {
             parseResultsFile(resultFileKey);
         } catch (IOException e) {
@@ -113,6 +118,10 @@ public class ClientMain {
     private String waitAndGetResultsFile(String myId) {
         Message msg = sqs.getMsgFromQueue(SQSHelper.Queues.FINISHED_JOBS, myId);
         sqs.removeMsgFromQueue(SQSHelper.Queues.FINISHED_JOBS, msg);
+
+        if(msg.getMessageAttributes().containsKey(Constants.REFUSE_ATTRIBUTE))
+            return null;
+
         return msg.getBody();
     }
 
