@@ -52,17 +52,36 @@ public class InstanceFactory {
                 .withSecurityGroups(SECURITY_GROUP)
                 .setUserData(getUserData(jarFileName));
 
-        RunInstancesResult runInstancesResult = amazonEC2Client.runInstances(runInstancesRequest);
-        runningInstances += newInstancesCount;
 
-        // Adding Tags
+        RunInstancesResult runInstancesResult;
+
+        try {
+            runInstancesResult = amazonEC2Client.runInstances(runInstancesRequest);
+        }
+        catch (Exception e) {
+            return 0;
+        }
+
         List<Instance> instances = runInstancesResult.getReservation().getInstances();
 
+        // counting how instances were really created
+        runningInstances += instances.size();
+
+        // Adding Tags
         for (Instance instance : instances) {
             CreateTagsRequest createTagsRequest = new CreateTagsRequest();
             createTagsRequest.withResources(instance.getInstanceId())
                     .withTags(new Tag("Type", jarFileName));
-            amazonEC2Client.createTags(createTagsRequest);
+
+            // sometimes instances creating too slow and while this code is running
+            // the instance is not listed yet
+            try {
+                amazonEC2Client.createTags(createTagsRequest);
+            }
+            catch (Exception e) {
+                System.out.println("cannt tag instance !");
+                e.printStackTrace();
+            }
         }
 
         return newInstancesCount;
@@ -102,7 +121,7 @@ public class InstanceFactory {
         userData.append("mkdir ~/.aws").append("\n");
         userData.append("mv ~/ass1/credentials ~/.aws/").append("\n");
         userData.append("curl -X POST -d \"starting " + jarFile + "\" http://requestb.in/1iom4uw1").append("\n");
-        userData.append("java -Xmx700m -jar ~/ass1/").append(jarFile).append(".jar 2>&1 log.txt").append("\n");
+        userData.append("java -Xmx700m -jar ~/ass1/").append(jarFile).append(".jar > log.txt").append("\n");
         userData.append("curl -X POST -d \"log for " + jarFile + "<br> `cat log.txt`\" http://requestb.in/1iom4uw1").append("\n");
         userData.append("sudo shutdown -h now");
 

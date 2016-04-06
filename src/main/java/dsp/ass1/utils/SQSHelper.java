@@ -94,7 +94,6 @@ public class SQSHelper {
        return messages.get(0);
     }
 
-
     public void removeMsgFromQueue(Queues queue, Message msg) {
         String queueUrl = sqs.getQueueUrl(queue.toString()).getQueueUrl();
 
@@ -105,8 +104,16 @@ public class SQSHelper {
         sqs.deleteMessage(deleteReq);
     }
 
+    public void extendMessageVisibility(Queues queue, Message msg) {
+        String queueUrl = sqs.getQueueUrl(queue.toString()).getQueueUrl();
 
+        ChangeMessageVisibilityRequest visibilityRequest = new ChangeMessageVisibilityRequest();
+        visibilityRequest.withQueueUrl(queueUrl);
+        visibilityRequest.withVisibilityTimeout(90);
+        visibilityRequest.withReceiptHandle(msg.getReceiptHandle());
 
+        sqs.changeMessageVisibility(visibilityRequest);
+    }
 
     public enum Queues {
         PENDING_JOBS {

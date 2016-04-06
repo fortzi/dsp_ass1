@@ -43,6 +43,8 @@ public class PendingJobsHandler implements Runnable {
                 break;
             }
 
+            sqs.extendMessageVisibility(SQSHelper.Queues.PENDING_JOBS, jobMessage);
+
             String jobObjectKey = jobMessage.getBody();
             Job job;
             S3Object jobObject;
