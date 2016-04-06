@@ -6,7 +6,6 @@ import dsp.ass1.utils.S3Helper;
 import dsp.ass1.utils.SQSHelper;
 
 import java.io.File;
-import java.util.HashMap;
 import java.util.Map;
 
 /**

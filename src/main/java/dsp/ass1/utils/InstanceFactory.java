@@ -133,9 +133,9 @@ public class InstanceFactory {
         userData.append("unzip -P `cat zipcred.txt` ").append(PACKAGE_FILE_NAME).append("\n");
         userData.append("mkdir ~/.aws").append("\n");
         userData.append("mv ~/ass1/credentials ~/.aws/").append("\n");
-        userData.append("curl -X POST -d \"starting " + jarFile + "\" http://requestb.in/1iom4uw1").append("\n");
+        userData.append("curl -X POST -d \"starting ").append(jarFile).append("\" http://requestb.in/1iom4uw1").append("\n");
         userData.append("java -Xmx700m -jar ~/ass1/").append(jarFile).append(".jar > log.txt 2>&1").append("\n");
-        userData.append("curl -X POST -d \"log for " + jarFile + "<br> `cat log.txt`\" http://requestb.in/1iom4uw1").append("\n");
+        userData.append("curl -X POST -d \"log for ").append(jarFile).append("<br> `cat log.txt`\" http://requestb.in/1iom4uw1").append("\n");
         userData.append("sudo shutdown -h now");
 
         try {

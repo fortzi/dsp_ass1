@@ -7,7 +7,6 @@ import dsp.ass1.utils.InstanceFactory;
 import dsp.ass1.utils.S3Helper;
 import dsp.ass1.utils.SQSHelper;
 
-import javax.print.DocFlavor;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -90,7 +89,11 @@ public class PendingJobsHandler implements Runnable {
             if (message != null) {
                 String jobId = message.getMessageId();
                 sqs.removeMsgFromQueue(SQSHelper.Queues.PENDING_JOBS, message);
-                sqs.sendMsgToQueue(SQSHelper.Queues.FINISHED_JOBS, "Message refused.", Constants.REFUSE_ATTRIBUTE);
+
+                Map<String, String> attributes = new HashMap<String, String>();
+                attributes.put(jobId, "true");
+                attributes.put(Constants.REFUSE_ATTRIBUTE, "true");
+                sqs.sendMsgToQueue(SQSHelper.Queues.FINISHED_JOBS, "Message refused.", attributes);
             }
 
             try {
