@@ -7,6 +7,9 @@ package dsp.ass1.manager;
 
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ManagerMain {
@@ -15,32 +18,22 @@ public class ManagerMain {
 
         ConcurrentHashMap<String, Job> allJobs = new ConcurrentHashMap<String, Job>();
 
-        Thread pendingJobsHandler = new Thread(new PendingJobsHandler(allJobs));
-        Thread finishedTweetsHandler = new Thread(new FinishedTweetsHandler(allJobs));
-        Thread finishedTweetsHandler1 = new Thread(new FinishedTweetsHandler(allJobs));
-        Thread finishedTweetsHandler2 = new Thread(new FinishedTweetsHandler(allJobs));
-        Thread finishedTweetsHandler3 = new Thread(new FinishedTweetsHandler(allJobs));
-        Thread finishedTweetsHandler4 = new Thread(new FinishedTweetsHandler(allJobs));
-        Thread finishedTweetsHandler5 = new Thread(new FinishedTweetsHandler(allJobs));
-        Thread finishedTweetsHandler6 = new Thread(new FinishedTweetsHandler(allJobs));
-        Thread finishedTweetsHandler7 = new Thread(new FinishedTweetsHandler(allJobs));
-        Thread workersHandler = new Thread(new WorkersHandler());
+        ExecutorService executor = Executors.newFixedThreadPool(7);
 
-        pendingJobsHandler.start();
-        finishedTweetsHandler.start();
-        finishedTweetsHandler1.start();
-        finishedTweetsHandler2.start();
-        finishedTweetsHandler3.start();
-        finishedTweetsHandler4.start();
-        finishedTweetsHandler5.start();
-        finishedTweetsHandler6.start();
-        finishedTweetsHandler7.start();
-        workersHandler.start();
+        executor.submit(new FinishedTweetsHandler(allJobs));
+        executor.submit(new FinishedTweetsHandler(allJobs));
+        executor.submit(new FinishedTweetsHandler(allJobs));
+        executor.submit(new FinishedTweetsHandler(allJobs));
+        executor.submit(new FinishedTweetsHandler(allJobs));
+
+        executor.submit(new PendingJobsHandler(allJobs));
+        executor.submit(new WorkersHandler());
+
+
+        executor.shutdown();
 
         try {
-            finishedTweetsHandler.join();
-            pendingJobsHandler.join();
-            workersHandler.join();
+            executor.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
         } catch (InterruptedException e) {
             System.err.println("Threads interrupted.");
             e.printStackTrace();
