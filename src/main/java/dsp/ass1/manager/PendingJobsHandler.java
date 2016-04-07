@@ -2,7 +2,7 @@ package dsp.ass1.manager;
 
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.sqs.model.Message;
-import dsp.ass1.utils.Constants;
+import dsp.ass1.utils.Settings;
 import dsp.ass1.utils.InstanceFactory;
 import dsp.ass1.utils.S3Helper;
 import dsp.ass1.utils.SQSHelper;
@@ -10,6 +10,7 @@ import dsp.ass1.utils.SQSHelper;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by Ofer Caspi on 04/02/2016.
@@ -18,21 +19,20 @@ import java.util.Map;
 public class PendingJobsHandler implements Runnable {
     S3Helper s3;
     SQSHelper sqs;
-    Map<String, Job> allJobs;
+    ConcurrentHashMap<String, Job> allJobs;
     InstanceFactory workerFactory;
 
-    public PendingJobsHandler(Map<String, Job> allJobs) {
+    public PendingJobsHandler(ConcurrentHashMap<String, Job> allJobs) {
         this.s3 = new S3Helper();
         this.sqs = new SQSHelper();
         this.allJobs = allJobs;
-        this.workerFactory = new InstanceFactory(Constants.INSTANCE_WORKER);
+        this.workerFactory = new InstanceFactory(Settings.INSTANCE_WORKER);
     }
 
     public void run() {
         System.out.println("Starting pending jobs handler");
-        ManagerMain.Auxiliary.workerCount = 0;
 
-        while (!ManagerMain.Auxiliary.terminate) {
+        while (!ManagerMain.Auxiliary.terminate.get()) {
             System.out.println("Waiting for jobs");
             Message jobMessage = sqs.getMsgFromQueue(SQSHelper.Queues.PENDING_JOBS);
             System.out.println("Found new job");
@@ -56,33 +56,23 @@ public class PendingJobsHandler implements Runnable {
             }
 
             allJobs.put(job.getId(), job);
-            System.out.println("Dispatching tweet tasks to SQS");
+            System.out.println("Dispatching tweet tasks for job " + job.getId() + " to SQS");
             Map<String, String> attributes = new HashMap<String, String>();
-            attributes.put(Constants.JOB_ID_ATTRIBUTE, job.getId());
+            attributes.put(Settings.JOB_ID_ATTRIBUTE, job.getId());
             for (String tweetURL : job.getUrls()) {
                 sqs.sendMsgToQueue(SQSHelper.Queues.PENDING_TWEETS, tweetURL, attributes);
             }
 
-            int messageCount = sqs.getMsgCount(SQSHelper.Queues.PENDING_TWEETS);
-            int newWorkersCount = messageCount / Constants.TWEETS_PER_WORKER - ManagerMain.Auxiliary.workerCount;
-
-            if (newWorkersCount > 0) {
-                System.out.println("Trying to create " + newWorkersCount + " new workers");
-                newWorkersCount = workerFactory.makeInstances(newWorkersCount);
-                ManagerMain.Auxiliary.workerCount += newWorkersCount;
-                System.out.println("Created " + newWorkersCount + " new workers");
+            if (jobMessage.getMessageAttributes().containsKey(Settings.TERMINATION_ATTRIBUTE)) {
+                System.out.println("Terminating...");
+                ManagerMain.Auxiliary.terminate.set(true);
             }
 
-
-            if (jobMessage.getMessageAttributes().containsKey(Constants.TERMINATION_ATTRIBUTE)) {
-                System.out.println("Terminating");
-                ManagerMain.Auxiliary.terminate = true;
-            }
-
-            System.out.println("Removing job from SQS queue");
+            System.out.println("Removing job " + job.getId() + " from SQS queue");
             sqs.removeMsgFromQueue(SQSHelper.Queues.PENDING_JOBS, jobMessage);
         }
 
+        // Actively refuse incoming requests until done
         while (!allJobs.isEmpty()) {
             Message message = sqs.getMsgFromQueue(SQSHelper.Queues.PENDING_JOBS, false);
 
@@ -92,8 +82,8 @@ public class PendingJobsHandler implements Runnable {
 
                 Map<String, String> attributes = new HashMap<String, String>();
                 attributes.put(jobId, "true");
-                attributes.put(Constants.REFUSE_ATTRIBUTE, "true");
-                sqs.sendMsgToQueue(SQSHelper.Queues.FINISHED_JOBS, "Message refused.", attributes);
+                attributes.put(Settings.REFUSE_ATTRIBUTE, "true");
+                sqs.sendMsgToQueue(SQSHelper.Queues.FINISHED_JOBS, "Message refused - Manager is terminating.", attributes);
             }
 
             try {

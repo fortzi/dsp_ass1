@@ -26,7 +26,7 @@ public class S3Helper {
      */
     public String putObject(Folders folder, File file) {
         String objectKey = folder + "/" + file.hashCode();
-        s3.putObject(new PutObjectRequest(Constants.BUCKET_NAME, objectKey, file));
+        s3.putObject(new PutObjectRequest(Settings.BUCKET_NAME, objectKey, file));
 
         return objectKey;
     }
@@ -38,7 +38,7 @@ public class S3Helper {
      * @throws AmazonClientException if the result input was unable to be processed
      */
     public S3Object getObject(String objectKey) throws AmazonClientException {
-        return s3.getObject(new GetObjectRequest(Constants.BUCKET_NAME, objectKey));
+        return s3.getObject(new GetObjectRequest(Settings.BUCKET_NAME, objectKey));
     }
 
     public static String getStringFromInputStream(InputStream input) throws IOException {
@@ -56,7 +56,7 @@ public class S3Helper {
     }
 
     public void removeObject(String objectKey) {
-        s3.deleteObject(Constants.BUCKET_NAME, objectKey);
+        s3.deleteObject(Settings.BUCKET_NAME, objectKey);
     }
 
     public void removeObject(S3Object s3Object) {

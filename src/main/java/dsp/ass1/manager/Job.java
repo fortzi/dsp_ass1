@@ -28,19 +28,21 @@ public class Job {
 
     public void close() {
         results.close();
+        results = null;
         if(!resultsFile.delete()) {
             System.err.println("Error while deleting temp file for job " + getId());
         }
     }
 
-    public int addResult(String result) {
+    /**
+     * Adds a result to the output file on disk
+     * @param result The string to add to the file
+     * @return Whether there are any more pending results
+     */
+    public synchronized boolean addResult(String result) throws NullPointerException {
         results.println(result);
         results.flush();
-        return --remainingUrls;
-    }
-
-    public boolean isComplete() {
-        return remainingUrls == 0;
+        return --remainingUrls == 0;
     }
 
     public String getId() {

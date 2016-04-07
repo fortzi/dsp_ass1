@@ -6,22 +6,27 @@ package dsp.ass1.manager;
  */
 
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ManagerMain {
     public static void main(String[] args) throws IOException {
         System.out.println("Starting manager node");
 
-        HashMap<String, Job> allJobs = new HashMap<String, Job>();
+        ConcurrentHashMap<String, Job> allJobs = new ConcurrentHashMap<String, Job>();
         Thread pendingJobsHandler = new Thread(new PendingJobsHandler(allJobs));
         Thread finishedJobsHandler = new Thread(new FinishedTweetsHandler(allJobs));
+        Thread WorkersHandler = new Thread(new WorkersHandler());
 
         pendingJobsHandler.start();
         finishedJobsHandler.start();
+        WorkersHandler.start();
 
         try {
             finishedJobsHandler.join();
             pendingJobsHandler.join();
+            WorkersHandler.join();
         } catch (InterruptedException e) {
             System.err.println("Threads interrupted.");
             e.printStackTrace();
@@ -31,7 +36,6 @@ public class ManagerMain {
     }
 
     protected static class Auxiliary {
-        public static boolean terminate = false;
-        public static int workerCount = 0;
+        public static AtomicBoolean terminate = new AtomicBoolean(false);
     }
 }

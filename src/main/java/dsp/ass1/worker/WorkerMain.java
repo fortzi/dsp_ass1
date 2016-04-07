@@ -3,7 +3,7 @@ package dsp.ass1.worker;
 import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.util.json.JSONException;
 import com.amazonaws.util.json.JSONObject;
-import dsp.ass1.utils.Constants;
+import dsp.ass1.utils.Settings;
 import dsp.ass1.utils.S3Helper;
 import dsp.ass1.utils.SQSHelper;
 import org.jsoup.Jsoup;
@@ -85,7 +85,7 @@ public class WorkerMain {
             msg = sqs.getMsgFromQueue(SQSHelper.Queues.PENDING_TWEETS, true);
 
             // check whether this is an termination message
-            if (msg.getMessageAttributes().containsKey(Constants.TERMINATION_ATTRIBUTE)) {
+            if (msg.getMessageAttributes().containsKey(Settings.TERMINATION_ATTRIBUTE)) {
                 break;
             }
 
@@ -97,7 +97,7 @@ public class WorkerMain {
             System.out.println("analyzing tweet");
             if(tweetText == null) {
                 // tweet parsing from web was failed
-                result.put("content", Constants.HTTP_ERROR + msg.getBody());
+                result.put("content", Settings.HTTP_ERROR + msg.getBody());
                 result.put("sentiment", -1);
                 result.put("entities", new JSONObject());
             }
@@ -111,8 +111,8 @@ public class WorkerMain {
             // pushing final results to the manager via FINISHED TWEETS queue
             System.out.println("sending results");
             Map<String, String> attributes = new HashMap<String, String>();
-            String job_id = msg.getMessageAttributes().get(Constants.JOB_ID_ATTRIBUTE).getStringValue();
-            attributes.put(Constants.JOB_ID_ATTRIBUTE, job_id);
+            String job_id = msg.getMessageAttributes().get(Settings.JOB_ID_ATTRIBUTE).getStringValue();
+            attributes.put(Settings.JOB_ID_ATTRIBUTE, job_id);
             sqs.sendMsgToQueue(SQSHelper.Queues.FINISHED_TWEETS, result.toString(), attributes);
 
             //now that the tweet analysis has been sent, we can delete original tweet msg from queue

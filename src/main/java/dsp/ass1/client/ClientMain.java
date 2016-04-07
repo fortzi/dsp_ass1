@@ -7,10 +7,7 @@ import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.util.json.JSONException;
 import com.amazonaws.util.json.JSONObject;
-import dsp.ass1.utils.Constants;
-import dsp.ass1.utils.InstanceFactory;
-import dsp.ass1.utils.S3Helper;
-import dsp.ass1.utils.SQSHelper;
+import dsp.ass1.utils.*;
 
 import java.io.*;
 import java.sql.Timestamp;
@@ -106,7 +103,7 @@ public class ClientMain {
         Map<String,String> atts = new HashMap<String, String>();
 
         if(terminate)
-            atts.put(Constants.TERMINATION_ATTRIBUTE,"true");
+            atts.put(Settings.TERMINATION_ATTRIBUTE,"true");
 
         return sqs.sendMsgToQueue(SQSHelper.Queues.PENDING_JOBS, fileKey, atts);
 
@@ -121,7 +118,7 @@ public class ClientMain {
         Message msg = sqs.getMsgFromQueue(SQSHelper.Queues.FINISHED_JOBS, myId);
         sqs.removeMsgFromQueue(SQSHelper.Queues.FINISHED_JOBS, msg);
 
-        if(msg.getMessageAttributes().containsKey(Constants.REFUSE_ATTRIBUTE))
+        if(msg.getMessageAttributes().containsKey(Settings.REFUSE_ATTRIBUTE))
             return null;
 
         return msg.getBody();
@@ -134,7 +131,7 @@ public class ClientMain {
     private boolean createManager() {
 
         System.out.println("Creating manager !");
-        new InstanceFactory(Constants.INSTANCE_MANAGER).makeInstance();
+        new InstanceFactory(Settings.INSTANCE_MANAGER).makeInstance();
         System.out.println("Manager Created !");
 
         return true;
@@ -145,27 +142,7 @@ public class ClientMain {
      * @return true if the manager exists
      */
     private boolean isManagerAlive() {
-
-        //creating ec2 object instance
-        AmazonEC2Client amazonEC2Client = new AmazonEC2Client();
-        amazonEC2Client.setRegion(Constants.REGION);
-
-        // defining filters:
-        // first filter for tag "Type = manager"
-        Filter filterType = new Filter("tag:Type");
-        filterType.withValues("manager");
-        // second filter for status != terminated
-        Filter filterState = new Filter("instance-state-name");
-        filterState.withValues("pending","running");
-
-        // creating request for list of instances
-        DescribeInstancesRequest describeReq = new DescribeInstancesRequest();
-        describeReq.withFilters(filterType, filterState);
-
-        // executing the request
-        DescribeInstancesResult describeRes = amazonEC2Client.describeInstances(describeReq);
-
-        return describeRes.getReservations().size() != 0;
+        return (new EC2Helper()).countInstancesOfType(Settings.INSTANCE_MANAGER) != 0;
     }
 
     /**

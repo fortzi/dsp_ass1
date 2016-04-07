@@ -39,9 +39,9 @@ public class InstanceFactory {
     public synchronized int makeInstances(int count) {
         int instancesCreated = 0;
 
-        while (count > Constants.INSTANCES_PER_QUANTA) {
-            count -= Constants.INSTANCES_PER_QUANTA;
-            instancesCreated += createInstances(Constants.INSTANCES_PER_QUANTA);
+        while (count > Settings.INSTANCES_PER_QUANTA) {
+            count -= Settings.INSTANCES_PER_QUANTA;
+            instancesCreated += createInstances(Settings.INSTANCES_PER_QUANTA);
         }
 
         instancesCreated += createInstances(count);
@@ -55,13 +55,13 @@ public class InstanceFactory {
      *          It is not advised to create too many at once.
      */
     private int createInstances(int count) {
-        int newInstancesCount = Math.min(count, Constants.INSTANCE_LIMIT - runningInstances);
+        int newInstancesCount = Math.min(count, Settings.INSTANCE_LIMIT - runningInstances);
         if (newInstancesCount <= 0) {
             return 0;
         }
 
         AmazonEC2Client amazonEC2Client = new AmazonEC2Client();
-        amazonEC2Client.setRegion(Constants.REGION);
+        amazonEC2Client.setRegion(Settings.REGION);
 
         RunInstancesRequest runInstancesRequest = new RunInstancesRequest();
         runInstancesRequest.setInstanceInitiatedShutdownBehavior(ShutdownBehavior.Terminate);

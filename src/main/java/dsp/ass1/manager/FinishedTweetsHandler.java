@@ -1,12 +1,12 @@
 package dsp.ass1.manager;
 
 import com.amazonaws.services.sqs.model.Message;
-import dsp.ass1.utils.Constants;
+import dsp.ass1.utils.Settings;
 import dsp.ass1.utils.S3Helper;
 import dsp.ass1.utils.SQSHelper;
 
 import java.io.File;
-import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by Ofer Caspi on 04/02/2016.
@@ -25,9 +25,9 @@ public class FinishedTweetsHandler implements Runnable {
 
     S3Helper s3;
     SQSHelper sqs;
-    Map<String, Job> allJobs;
+    ConcurrentHashMap<String, Job> allJobs;
 
-    public FinishedTweetsHandler(Map<String, Job> allJobs) {
+    public FinishedTweetsHandler(ConcurrentHashMap<String, Job> allJobs) {
         this.s3 = new S3Helper();
         this.sqs = new SQSHelper();
         this.allJobs = allJobs;
@@ -35,44 +35,39 @@ public class FinishedTweetsHandler implements Runnable {
 
     public void run() {
         System.out.println("Starting finished tweets handler");
+        boolean isJobComplete = false;
+
         while (true) {
             System.out.println("Waiting for tweets results");
             Message tweetMessage = sqs.getMsgFromQueue(SQSHelper.Queues.FINISHED_TWEETS);
-
-            System.out.println("Found a tweet results");
             String tweetResult = tweetMessage.getBody();
-            String jobId = tweetMessage.getMessageAttributes().get(Constants.JOB_ID_ATTRIBUTE).getStringValue();
+            String jobId = tweetMessage.getMessageAttributes().get(Settings.JOB_ID_ATTRIBUTE).getStringValue();
             Job job = allJobs.get(jobId);
+            System.out.println("Found a tweet results for job " + job.getId());
 
             try {
-                job.addResult(tweetResult);
+                isJobComplete = job.addResult(tweetResult);
                 sqs.removeMsgFromQueue(SQSHelper.Queues.FINISHED_TWEETS, tweetMessage);
             } catch (NullPointerException e) {
-                System.err.println("Job " + jobId + " unknown.");
+                System.err.println("Error with job " + jobId);
                 return;
             }
 
-            if (!job.isComplete()) {
+            if (!isJobComplete) {
                 continue;
             }
 
+            job.close();
             File results = job.getResultsFile();
-            System.out.println("Uploading job results to S3");
+            System.out.println("Uploading job " + job.getId() + " results to S3");
             String finishedJobObjectKey = s3.putObject(S3Helper.Folders.FINISHED_JOBS, results);
 
             System.out.println("Sending job results message to SQS");
             sqs.sendMsgToQueue(SQSHelper.Queues.FINISHED_JOBS, finishedJobObjectKey, job.getId());
 
-            job.close();
             allJobs.remove(job.getId());
 
-            if (allJobs.isEmpty() && ManagerMain.Auxiliary.terminate) {
-                System.out.println("Sending termination messages to " + ManagerMain.Auxiliary.workerCount + " workers");
-
-                while (ManagerMain.Auxiliary.workerCount-- > 0) {
-                    sqs.sendMsgToQueue(SQSHelper.Queues.PENDING_TWEETS, "Termination message", Constants.TERMINATION_ATTRIBUTE);
-                }
-
+            if (allJobs.isEmpty() && ManagerMain.Auxiliary.terminate.get()) {
                 break;
             }
         }
