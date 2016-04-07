@@ -74,10 +74,10 @@ public class ClientMain {
         try {
             parseResultsFile(resultFileKey);
         } catch (IOException e) {
-            System.out.println("problam with file opening");
+            System.out.println("problem with file opening");
             e.printStackTrace();
         } catch (JSONException e) {
-            System.out.println("problam parsing Json");
+            System.out.println("problem parsing Json");
             e.printStackTrace();
         }
 
