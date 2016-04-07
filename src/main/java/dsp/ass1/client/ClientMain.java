@@ -13,6 +13,7 @@ import dsp.ass1.utils.S3Helper;
 import dsp.ass1.utils.SQSHelper;
 
 import java.io.*;
+import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -45,7 +46,7 @@ public class ClientMain {
     }
 
     private void clientRun(boolean terminate, String fileName) {
-
+        System.out.println(new Timestamp((new java.util.Date()).getTime()) + " Client started.");
 
         if(!isManagerAlive()) {
             System.out.println("Manager was not found !");
@@ -54,7 +55,7 @@ public class ClientMain {
             }
         }
         else {
-            System.out.println("Manager was found !");
+            System.out.println( "Manager was found !");
         }
 
         System.out.println("uploading " + fileName + " to S3");
@@ -90,7 +91,7 @@ public class ClientMain {
         System.out.println("parsing completed, removing file");
         System.out.println();
         s3.removeObject(resultFileKey);
-        System.out.println("finished. goodbye !");
+        System.out.println(new Timestamp((new java.util.Date()).getTime()) + "finished. goodbye !");
     }
 
     /**
@@ -185,7 +186,7 @@ public class ClientMain {
                 "<head>\n" +
                 "<style>\n" +
                 "\tbody {\n" +
-                "\t\tfont-family: Arial;\n" +
+                "\t\tfont-family: 'Open Sans', Arial;\n" +
                 "\t\ttext-align: center;\n" +
                 "\t\tbackground: #F5F8FA;\n" +
                 "\t\tmargin: 0px;\n" +
@@ -262,7 +263,9 @@ public class ClientMain {
             tweet = new JSONObject(line);
             int sentiment = tweet.getInt("sentiment");
             String sentimentDescription = "Bad Sentiment Value";
-            if (sentiments.length < sentiment) {
+            if (sentiment < 0) {
+                sentimentDescription = "Error processing tweet";
+            } else if (sentiment < sentiments.length) {
                 sentimentDescription = sentiments[sentiment];
             }
 
@@ -274,20 +277,19 @@ public class ClientMain {
 
             entities = tweet.getJSONObject("entities");
             if (entities.length() == 0) {
-                writer.println("&nbsp;");
+                writer.println("\t\t\t\t&nbsp;");
             } else {
                 Iterator<?> keys = entities.keys();
-                writer.println("\t\t\t\t<ul>\n");
+                writer.println("\t\t\t\t<ul>");
                 while( keys.hasNext() ){
                     String key = (String)keys.next();
                     String value = entities.getString(key);
                     writer.println("\t\t\t\t\t<li>" + key + ":<span class=\"entity-value\">" + value + "</span></li>");
                 }
-                writer.println("\t\t\t\t</ul>\n");
+                writer.println("\t\t\t\t</ul>");
             }
 
             writer.println(
-                    "\t\t\t\t</ul>\n" +
                     "\t\t\t</div>\n" +
                     "\t\t</li>");
         }
