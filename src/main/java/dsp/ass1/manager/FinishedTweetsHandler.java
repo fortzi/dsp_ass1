@@ -35,7 +35,7 @@ public class FinishedTweetsHandler implements Runnable {
 
     public void run() {
         System.out.println("Starting finished tweets handler");
-        boolean isJobComplete = false;
+        boolean isJobComplete;
 
         while (true) {
             System.out.println("Waiting for tweets results");
