@@ -65,26 +65,26 @@ public class ClientMain {
         String resultFileKey = waitAndGetResultsFile(myId);
 
         if(resultFileKey == null) {
-            System.out.println("job refused ! manager not accepting any more jobs");
+            System.out.println("job refused! manager not accepting any more jobs.");
             System.out.println("please try again later.");
             return;
         }
 
-        System.out.println("job finished ! parsing results file.");
+        System.out.println("job finished! parsing results file.");
         try {
             parseResultsFile(resultFileKey);
         } catch (IOException e) {
-            System.out.println("problem with file opening");
+            System.out.println("problem opening file");
             e.printStackTrace();
         } catch (JSONException e) {
-            System.out.println("problem parsing Json");
+            System.out.println("problem parsing JSON");
             e.printStackTrace();
         }
 
         System.out.println("parsing completed, removing file");
         System.out.println();
         s3.removeObject(resultFileKey);
-        System.out.println(new Timestamp((new java.util.Date()).getTime()) + "finished. goodbye !");
+        System.out.println(new Timestamp((new java.util.Date()).getTime()) + "finished. goodbye!");
     }
 
     /**

@@ -43,8 +43,12 @@ public class FinishedTweetsHandler implements Runnable {
             String tweetResult = tweetMessage.getBody();
             String jobId = tweetMessage.getMessageAttributes().get(Settings.JOB_ID_ATTRIBUTE).getStringValue();
             Job job = allJobs.get(jobId);
-            System.out.println("Found a tweet results for job " + job.getId());
+            if (job == null) {
+                // Leave the message there, in case another manager exists and might handle it.
+                continue;
+            }
 
+            System.out.println("Found a tweet results for job " + job.getId());
             isJobComplete = job.addResult(tweetResult);
             sqs.removeMsgFromQueue(SQSHelper.Queues.FINISHED_TWEETS, tweetMessage);
 
