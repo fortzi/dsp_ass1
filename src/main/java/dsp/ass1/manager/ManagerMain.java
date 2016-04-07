@@ -14,18 +14,33 @@ public class ManagerMain {
         System.out.println("Starting manager node");
 
         ConcurrentHashMap<String, Job> allJobs = new ConcurrentHashMap<String, Job>();
+
         Thread pendingJobsHandler = new Thread(new PendingJobsHandler(allJobs));
-        Thread finishedJobsHandler = new Thread(new FinishedTweetsHandler(allJobs));
-        Thread WorkersHandler = new Thread(new WorkersHandler());
+        Thread finishedTweetsHandler = new Thread(new FinishedTweetsHandler(allJobs));
+        Thread finishedTweetsHandler1 = new Thread(new FinishedTweetsHandler(allJobs));
+        Thread finishedTweetsHandler2 = new Thread(new FinishedTweetsHandler(allJobs));
+        Thread finishedTweetsHandler3 = new Thread(new FinishedTweetsHandler(allJobs));
+        Thread finishedTweetsHandler4 = new Thread(new FinishedTweetsHandler(allJobs));
+        Thread finishedTweetsHandler5 = new Thread(new FinishedTweetsHandler(allJobs));
+        Thread finishedTweetsHandler6 = new Thread(new FinishedTweetsHandler(allJobs));
+        Thread finishedTweetsHandler7 = new Thread(new FinishedTweetsHandler(allJobs));
+        Thread workersHandler = new Thread(new WorkersHandler());
 
         pendingJobsHandler.start();
-        finishedJobsHandler.start();
-        WorkersHandler.start();
+        finishedTweetsHandler.start();
+        finishedTweetsHandler1.start();
+        finishedTweetsHandler2.start();
+        finishedTweetsHandler3.start();
+        finishedTweetsHandler4.start();
+        finishedTweetsHandler5.start();
+        finishedTweetsHandler6.start();
+        finishedTweetsHandler7.start();
+        workersHandler.start();
 
         try {
-            finishedJobsHandler.join();
+            finishedTweetsHandler.join();
             pendingJobsHandler.join();
-            WorkersHandler.join();
+            workersHandler.join();
         } catch (InterruptedException e) {
             System.err.println("Threads interrupted.");
             e.printStackTrace();
