@@ -27,7 +27,7 @@ public class ManagerMain {
         executor.submit(new FinishedTweetsHandler(allJobs));
 
         executor.submit(new PendingJobsHandler(allJobs));
-        executor.submit(new WorkersHandler());
+        executor.submit(new WorkersHandler(allJobs));
 
 
         executor.shutdown();
