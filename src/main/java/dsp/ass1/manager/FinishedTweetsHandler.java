@@ -45,19 +45,13 @@ public class FinishedTweetsHandler implements Runnable {
             Job job = allJobs.get(jobId);
             System.out.println("Found a tweet results for job " + job.getId());
 
-            try {
-                isJobComplete = job.addResult(tweetResult);
-                sqs.removeMsgFromQueue(SQSHelper.Queues.FINISHED_TWEETS, tweetMessage);
-            } catch (NullPointerException e) {
-                System.err.println("Error with job " + jobId);
-                return;
-            }
+            isJobComplete = job.addResult(tweetResult);
+            sqs.removeMsgFromQueue(SQSHelper.Queues.FINISHED_TWEETS, tweetMessage);
 
             if (!isJobComplete) {
                 continue;
             }
 
-            job.close();
             File results = job.getResultsFile();
             System.out.println("Uploading job " + job.getId() + " results to S3");
             String finishedJobObjectKey = s3.putObject(S3Helper.Folders.FINISHED_JOBS, results);

@@ -19,6 +19,7 @@ public class Job {
         this.urls = urls;
         this.remainingUrls = urls.length;
         this.resultsFile = File.createTempFile(String.valueOf(Arrays.hashCode(urls)), ".txt");
+        resultsFile.deleteOnExit();
         this.results = new PrintWriter(new BufferedWriter(new FileWriter(resultsFile.getPath(), true)));
     }
 
@@ -26,12 +27,10 @@ public class Job {
         return resultsFile;
     }
 
-    public void close() {
+    public void finalize() throws Throwable {
         results.close();
         results = null;
-        if(!resultsFile.delete()) {
-            System.err.println("Error while deleting temp file for job " + getId());
-        }
+        super.finalize();
     }
 
     /**
@@ -39,7 +38,7 @@ public class Job {
      * @param result The string to add to the file
      * @return Whether there are any more pending results
      */
-    public synchronized boolean addResult(String result) throws NullPointerException {
+    public synchronized boolean addResult(String result) {
         results.println(result);
         results.flush();
         return --remainingUrls == 0;
