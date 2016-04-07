@@ -37,7 +37,7 @@ public class FinishedTweetsHandler implements Runnable {
         System.out.println("Starting finished tweets handler");
         boolean isJobComplete;
 
-        while (true) {
+        while (!allJobs.isEmpty() || !ManagerMain.Auxiliary.terminate.get()) {
             System.out.println("Waiting for tweets results");
             Message tweetMessage = sqs.getMsgFromQueue(SQSHelper.Queues.FINISHED_TWEETS);
             String tweetResult = tweetMessage.getBody();
@@ -64,10 +64,6 @@ public class FinishedTweetsHandler implements Runnable {
             sqs.sendMsgToQueue(SQSHelper.Queues.FINISHED_JOBS, finishedJobObjectKey, job.getId());
 
             allJobs.remove(job.getId());
-
-            if (allJobs.isEmpty() && ManagerMain.Auxiliary.terminate.get()) {
-                break;
-            }
         }
     }
 }

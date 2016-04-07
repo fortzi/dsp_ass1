@@ -6,7 +6,8 @@ import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Filter;
 
 /**
- * Created by user1 on 04/07/2016.
+ * Created by Ofer Caspi on 04/07/2016.
+ *
  */
 public class EC2Helper {
     private AmazonEC2Client amazonEC2Client;
