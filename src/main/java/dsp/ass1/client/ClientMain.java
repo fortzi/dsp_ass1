@@ -1,9 +1,5 @@
 package dsp.ass1.client;
 
-import com.amazonaws.services.ec2.AmazonEC2Client;
-import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
-import com.amazonaws.services.ec2.model.DescribeInstancesResult;
-import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.util.json.JSONException;
 import com.amazonaws.util.json.JSONObject;
