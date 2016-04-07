@@ -24,6 +24,7 @@ public class ClientMain {
 
     private SQSHelper sqs;
     private S3Helper s3;
+    private final String[] sentiments = { "Very Negative", "Negative", "Neutral", "Positive", "Very Positive" };
 
     public static void main(String[] args) {
 
@@ -182,76 +183,120 @@ public class ClientMain {
         writer.println(
                 "<html>\n" +
                 "<head>\n" +
-                "<style>");
-        writer.println(
-                "body { font-family: Arial; }\n" +
-                "\n" +
-                "\t#tweetsTable { border: 1px solid #CCC; }\n" +
-                "\t#tweetsTable tr:nth-child(odd)  { background: #F9F9F9; }\n" +
-                "\t#tweetsTable tr:nth-child(even) { background: #EEE; }\n" +
-                "\t#tweetsTable td:nth-child(odd)  {\n" +
-                "\t\tborder-right: 1px solid #CCC;\n" +
-                "\t\twidth: 70%;\n" +
+                "<style>\n" +
+                "\tbody {\n" +
+                "\t\tfont-family: Arial;\n" +
+                "\t\ttext-align: center;\n" +
+                "\t\tbackground: #F5F8FA;\n" +
+                "\t\tmargin: 0px;\n" +
                 "\t}\n" +
-                "\t#tweetsTable tr.header td {\n" +
-                "\t\tborder-bottom: 1px solid #CCC;\n" +
-                "\t\tfont-weight: bold;\n" +
+                "\t\n" +
+                "\t#header {\n" +
+                "\t\tbackground: #1DA1F2;\n" +
+                "\t\tcolor: white;\n" +
+                "\t\tfont-size: 3em;\n" +
+                "\t\tmargin: 30px 0px 0px 0px;\n" +
+                "\t\tpadding: 20px;\n" +
                 "\t}\n" +
-                "\t#tweetsTable td {\n" +
-                "\t\tpadding: 10px;\n" +
+                "\t\n" +
+                "\t#tweetsListContainer {\n" +
+                "\t\tmargin: auto;\n" +
+                "\t\twidth: 600px;\n" +
+                "\t}\n" +
+                "\t\n" +
+                "\t#tweetsList {\n" +
+                "\t\tmargin: 0px;\n" +
                 "\t\ttext-align: left;\n" +
-                "\t\tvertical-align: top;\n" +
                 "\t}\n" +
                 "\t\n" +
-                "\t.tweet\t\t { color: pink; }\n" +
-                "\t.sentiment-0 { color: darkred; }\n" +
-                "\t.sentiment-1 { color: red; }\n" +
-                "\t.sentiment-2 { color: black; }\n" +
-                "\t.sentiment-3 { color: lightgreen; }\n" +
-                "\t.sentiment-4 { color: darkgreen; }\n" +
+                "\t.tweet {\n" +
+                "\t\tborder: 1px solid #E1E8ED;\n" +
+                "\t\tbackground: #FFF;\n" +
+                "\t\tmargin: 30px;\n" +
+                "\t}\n" +
                 "\t\n" +
-                "\t.entities ul {\n" +
+                "\t.tweet div {\n" +
+                "\t\tpadding: 10px;\n" +
+                "\t\tborder-bottom: 1px solid #E1E8ED;\n" +
+                "\t}\n" +
+                "\t\n" +
+                "\tul {\n" +
                 "\t\tlist-style-type: none;\n" +
                 "\t\tpadding: 0px;\n" +
-                "\t}\n");
-        writer.println(
+                "\t}\n" +
+                "\t\n" +
+                "\t.title { vertical-align: center; }\n" +
+                "\t.tweet div:last-child { border-bottom: 0px; }\n" +
+                "\t.title ul { list-style-type: square; }\n" +
+                "\t.entities li { display: inline; }\n" +
+                "\t.entities .entity-value { font-weight: normal; }\n" +
+                "\t.entities, .title {\n" +
+                "\t\tfont-weight: bold;\n" +
+                "\t\tfont-size: 0.8em;\n" +
+                "\t\tvertical-align: center;\n" +
+                "\t}\n" +
+                "\t\n" +
+                "\t.title .sentiment {\n" +
+                "\t\tbackground: pink;\n" +
+                "\t\twidth: 20px;\n" +
+                "\t\theight: 20px;\n" +
+                "\t\tdisplay: inline-block;\n" +
+                "\t\tmargin-right: 10px;\n" +
+                "\t}\n" +
+                "\t.sentiment-0 .title .sentiment { background: darkred; }\n" +
+                "\t.sentiment-1 .title .sentiment { background: red; }\n" +
+                "\t.sentiment-2 .title .sentiment { background: black; }\n" +
+                "\t.sentiment-3 .title .sentiment { background: lightgreen; }\n" +
+                "\t.sentiment-4 .title .sentiment { background: darkgreen; }\n" +
+                "\t\n" +
                 "</style>\n" +
                 "</head>\n" +
                 "<body>\n" +
-                "\t<table id=\"tweetsTable\" cellspacing=\"0\">\n" +
-                "\t\t<tr class=\"header\">\n" +
-                "\t\t\t<td>Tweets</td>\n" +
-                "\t\t\t<td>Entities</td>\n" +
-                "\t\t</tr>");
+                "\t<div id=\"header\">\n" +
+                "\t\tTwitter Sentiment Analysis & Entity Recognition\n" +
+                "\t</div>\n" +
+                "<div id=\"tweetsListContainer\">\n" +
+                "\t<ul id=\"tweetsList\">");
 
         while((line = reader.readLine()) != null) {
             tweet = new JSONObject(line);
-            writer.println(
-                    "<tr>\n" +
-                    "\t\t\t<td class=\"tweet sentiment-" + tweet.getInt("sentiment") + "\">" +
-                    tweet.getString("content") +
-                    "</td>\n" +
-                    "\t\t\t<td class=\"entities\">\n" +
-                    "\t\t\t\t<ul>\n");
-
-            entities = tweet.getJSONObject("entities");
-            Iterator<?> keys = entities.keys();
-
-            while( keys.hasNext() ){
-                String key = (String)keys.next();
-                String value = entities.getString(key);
-                writer.println("\t\t\t\t\t<li>" + key +" = " + value + "</li>");
+            int sentiment = tweet.getInt("sentiment");
+            String sentimentDescription = "Bad Sentiment Value";
+            if (sentiments.length < sentiment) {
+                sentimentDescription = sentiments[sentiment];
             }
 
-            writer.println("\t\t\t\t</ul>\n" +
-                    "\t\t\t</td>\n" +
-                    "\t\t</tr>");
+            writer.println(
+                    "<li class=\"tweet sentiment-" + sentiment + "\">\n" +
+                    "\t\t\t<div class=\"title\"><span class=\"sentiment\">&nbsp;</span>Sentiment: " + sentimentDescription + "</div>\n" +
+                    "\t\t\t<div class=\"content\">" + tweet.getString("content") + "</div>\n" +
+                    "\t\t\t<div class=\"entities\">\n");
+
+            entities = tweet.getJSONObject("entities");
+            if (entities.length() == 0) {
+                writer.println("&nbsp;");
+            } else {
+                Iterator<?> keys = entities.keys();
+                writer.println("\t\t\t\t<ul>\n");
+                while( keys.hasNext() ){
+                    String key = (String)keys.next();
+                    String value = entities.getString(key);
+                    writer.println("\t\t\t\t\t<li>" + key + ":<span class=\"entity-value\">" + value + "</span></li>");
+                }
+                writer.println("\t\t\t\t</ul>\n");
+            }
+
+            writer.println(
+                    "\t\t\t\t</ul>\n" +
+                    "\t\t\t</div>\n" +
+                    "\t\t</li>");
         }
 
         writer.println(
-                "\t</table>\n" +
+                "\t</ul>\n" +
+                "</div>\n" +
                 "</body>\n" +
-                "<html>");
+                "</html>");
 
         writer.close();
     }
