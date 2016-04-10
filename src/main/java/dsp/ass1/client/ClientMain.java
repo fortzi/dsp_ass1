@@ -187,6 +187,7 @@ public class ClientMain {
                 "\t\tborder: 1px solid #E1E8ED;\n" +
                 "\t\tbackground: #FFF;\n" +
                 "\t\tmargin: 30px;\n" +
+                "\t\tbox-shadow: 3px 4px 7px #CCCCCC;\n" +
                 "\t}\n" +
                 "\t\n" +
                 "\t.tweet div {\n" +
