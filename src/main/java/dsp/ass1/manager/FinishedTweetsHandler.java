@@ -39,7 +39,11 @@ public class FinishedTweetsHandler implements Runnable {
 
         while (!allJobs.isEmpty() || !ManagerMain.Auxiliary.terminate.get()) {
             System.out.println("Waiting for tweets results");
-            Message tweetMessage = sqs.getMsgFromQueue(SQSHelper.Queues.FINISHED_TWEETS);
+            Message tweetMessage = sqs.getMsgFromQueue(SQSHelper.Queues.FINISHED_TWEETS, false);
+            if (tweetMessage == null) {
+                continue;
+            }
+
             String tweetResult = tweetMessage.getBody();
             String jobId = tweetMessage.getMessageAttributes().get(Settings.JOB_ID_ATTRIBUTE).getStringValue();
             Job job = allJobs.get(jobId);
