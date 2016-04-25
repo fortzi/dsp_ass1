@@ -68,7 +68,7 @@ public class PendingJobsHandler implements Runnable {
                 ManagerMain.Auxiliary.terminate.set(true);
             }
 
-            System.out.println("Removing job " + job.getId() + " from SQS queue");
+            System.out.println("Removing job " + job.getId() + " from pending jobs SQS queue");
             sqs.removeMsgFromQueue(SQSHelper.Queues.PENDING_JOBS, jobMessage);
         }
 
@@ -93,5 +93,6 @@ public class PendingJobsHandler implements Runnable {
                 e.printStackTrace();
             }
         }
+
     }
 }
