@@ -23,10 +23,12 @@
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="true" />
         <module name="aws-java-sample" />
+        <module name="dsp-ass1" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="aws-java-sample" target="1.5" />
+      <module name="dsp-ass1" target="1.5" />
     </bytecodeTargetLevel>
   </component>
 </project>

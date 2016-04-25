@@ -65,5 +65,7 @@ public class FinishedTweetsHandler implements Runnable {
 
             allJobs.remove(job.getId());
         }
+
+        System.out.println("FinishedTweetsHandler exits");
     }
 }
