@@ -4,6 +4,7 @@ import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Filter;
+import com.amazonaws.services.ec2.model.Reservation;
 
 /**
  * Created by Ofer Caspi on 04/07/2016.
@@ -34,6 +35,12 @@ public class EC2Helper {
         // executing the request
         DescribeInstancesResult describeRes = amazonEC2Client.describeInstances(describeReq);
 
-        return describeRes.getReservations().size();
+        int instanceCount = 0;
+
+        for (Reservation reservation : describeRes.getReservations()) {
+            instanceCount += reservation.getInstances().size();
+        }
+
+        return instanceCount;
     }
 }
