@@ -4,6 +4,7 @@ import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.model.*;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -96,11 +97,13 @@ public class SQSHelper {
         ReceiveMessageRequest receiveRequest = new ReceiveMessageRequest(queueUrl);
 
         receiveRequest.withMaxNumberOfMessages(1);
-        receiveRequest.withMessageAttributeNames(id);
+        receiveRequest.withMessageAttributeNames("All");
 
         do {
             messages = sqs.receiveMessage(receiveRequest).getMessages();
-        } while(messages.size() == 0);
+        } while(messages.size() == 0 || !messages.get(0).getMessageAttributes().containsKey(id));
+
+        extendMessageVisibility(queue, messages.get(0));
 
        return messages.get(0);
     }
