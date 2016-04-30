@@ -45,6 +45,6 @@ public class ManagerMain {
 
     protected static class Auxiliary {
         static AtomicBoolean terminate = new AtomicBoolean(false);
-        static AtomicInteger raito = new AtomicInteger(0);
+        static AtomicInteger ratio = new AtomicInteger(0);
     }
 }

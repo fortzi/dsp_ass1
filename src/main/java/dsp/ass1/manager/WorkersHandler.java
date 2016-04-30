@@ -28,10 +28,14 @@ public class WorkersHandler implements Runnable {
         int neededWorkers;
         int createdWorkers;
 
+        System.out.println("workers handler started");
+
         while (!ManagerMain.Auxiliary.terminate.get() || !allJobs.isEmpty()) {
             neededWorkers =
-                    sqs.getMsgCount(SQSHelper.Queues.PENDING_TWEETS) / ManagerMain.Auxiliary.raito.get()
+                    (sqs.getMsgCount(SQSHelper.Queues.PENDING_TWEETS) / ManagerMain.Auxiliary.ratio.get())
                     - ec2.countInstancesOfType(Settings.INSTANCE_WORKER);
+
+            System.out.println("needed workers " + neededWorkers);
 
             if (neededWorkers > 0) {
                 System.out.println("Trying to create " + neededWorkers + " new workers");
@@ -45,6 +49,9 @@ public class WorkersHandler implements Runnable {
                 e.printStackTrace();
             }
         }
+
+        System.out.println("workers handler finished");
+
 
         createdWorkers = ec2.countInstancesOfType(Settings.INSTANCE_WORKER);
         System.out.println("Sending termination messages to " + createdWorkers + " workers");

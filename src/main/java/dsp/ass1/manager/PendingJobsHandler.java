@@ -1,5 +1,7 @@
 package dsp.ass1.manager;
 
+import com.amazonaws.AmazonClientException;
+import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.sqs.model.Message;
 import dsp.ass1.utils.Settings;
@@ -49,9 +51,9 @@ public class PendingJobsHandler implements Runnable {
                 String rawJob = S3Helper.getStringFromInputStream(jobObject.getObjectContent());
                 job = new Job(rawJob.split("\n"), jobMessage.getMessageId());
                 s3.removeObject(jobObject);
-            } catch (IOException e) {
-                System.err.println("Error with job: " + jobObjectKey + "\n " + e.getStackTrace());
-                handle_panic(jobMessage, "JobHandler: Error with S3 object from job " + jobMessage.getMessageId());
+            } catch (Exception e) {
+                System.err.println("Error with job: " + jobObjectKey);
+                handle_panic(jobMessage, "JobHandler: Error with s3 file from job " + jobMessage.getMessageId());
                 continue;
             }
 
@@ -63,9 +65,9 @@ public class PendingJobsHandler implements Runnable {
             }
 
             /* updating ratio from current job */
-            int ratio = Integer.parseInt(jobMessage.getMessageAttributes().get(Settings.RATIO_ATTRIBUTE).toString());
-            if((ManagerMain.Auxiliary.raito.get() ==0) || (ManagerMain.Auxiliary.raito.get() > ratio))
-                ManagerMain.Auxiliary.raito.set(ratio);
+            int ratio = Integer.parseInt(jobMessage.getMessageAttributes().get(Settings.RATIO_ATTRIBUTE).getStringValue());
+            if((ManagerMain.Auxiliary.ratio.get() > ratio) || (ManagerMain.Auxiliary.ratio.get() == 0))
+                ManagerMain.Auxiliary.ratio.set(ratio);
 
             allJobs.put(job.getId(), job);
             System.out.println("Dispatching tweet tasks for job " + job.getId() + " to SQS");
@@ -118,14 +120,15 @@ public class PendingJobsHandler implements Runnable {
      * @param err error message to be sent to user
      */
     private void handle_panic(Message jobMessage, String err) {
+        System.out.println("~@~ error");
         /* send error message to debugging queue */
         sqs.sendMsgToQueue(SQSHelper.Queues.DEBUGGING, err);
-        /* remove defected message from SQS queue */
-        sqs.removeMsgFromQueue(SQSHelper.Queues.PENDING_JOBS, jobMessage);
         /* send notice back to user */
         Map<String, String> attributes = new HashMap<String, String>();
         attributes.put(jobMessage.getMessageId(), "true");
         attributes.put(Settings.ERROR_ATTRIBUTE, "true");
         sqs.sendMsgToQueue(SQSHelper.Queues.FINISHED_JOBS, err, attributes);
+        /* remove defected message from SQS queue */
+        sqs.removeMsgFromQueue(SQSHelper.Queues.PENDING_JOBS, jobMessage);
     }
 }
