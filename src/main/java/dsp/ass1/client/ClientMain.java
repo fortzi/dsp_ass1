@@ -22,15 +22,21 @@ public class ClientMain {
 
     public static void main(String[] args) {
 
-        if(args.length < 1){
-            System.out.println("arguments are missing");
+        if(args.length < 2){
+            System.out.println("arguments are missing (\"client input.txt n [terminate]\")");
             return;
         }
 
         ClientMain client = new ClientMain();
-        boolean terminate = args.length > 1 && "terminate".equals(args[1]);
+        boolean terminate = args.length > 2 && "terminate".equals(args[2]);
 
-        client.clientRun(terminate, args[0]);
+        /* making sure second argument is really a number */
+        try { Integer.parseInt(args[1]); } catch (Exception e) {
+            System.out.println("second argument should be a number");
+            return;
+        }
+
+        client.clientRun(terminate, args[1], args[0]);
     }
 
     public ClientMain() {
@@ -38,7 +44,7 @@ public class ClientMain {
         s3 = new S3Helper();
     }
 
-    private void clientRun(boolean terminate, String fileName) {
+    private void clientRun(boolean terminate, String n, String fileName) {
         System.out.println(new Timestamp((new java.util.Date()).getTime()) + " Client started.");
 
         if(!isManagerAlive()) {
@@ -56,7 +62,7 @@ public class ClientMain {
         System.out.println("file was uploaded successfully with key: " + inputFileKey);
 
         System.out.println("sending newJobSignal to SQS");
-        String myId = sendNewJobSignal(inputFileKey, terminate);
+        String myId = sendNewJobSignal(inputFileKey, n, terminate);
         System.out.println("message sent successfully");
 
         System.out.println("my id: " + myId);
@@ -94,12 +100,14 @@ public class ClientMain {
      * @param terminate indicating if this should also be termination message
      * @return message id (will be the client id for the rest of the run)
      */
-    private String sendNewJobSignal(String fileKey, boolean terminate) {
+    private String sendNewJobSignal(String fileKey, String ratio, boolean terminate) {
 
         Map<String,String> atts = new HashMap<String, String>();
 
         if(terminate)
             atts.put(Settings.TERMINATION_ATTRIBUTE,"true");
+
+        atts.put(Settings.RATIO_ATTRIBUTE, ratio);
 
         return sqs.sendMsgToQueue(SQSHelper.Queues.PENDING_JOBS, fileKey, atts);
 

@@ -30,7 +30,7 @@ public class WorkersHandler implements Runnable {
 
         while (!ManagerMain.Auxiliary.terminate.get() || !allJobs.isEmpty()) {
             neededWorkers =
-                    sqs.getMsgCount(SQSHelper.Queues.PENDING_TWEETS) / Settings.TWEETS_PER_WORKER
+                    sqs.getMsgCount(SQSHelper.Queues.PENDING_TWEETS) / ManagerMain.Auxiliary.raito.get()
                     - ec2.countInstancesOfType(Settings.INSTANCE_WORKER);
 
             if (neededWorkers > 0) {

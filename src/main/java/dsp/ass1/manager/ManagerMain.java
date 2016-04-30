@@ -11,6 +11,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ManagerMain {
     public static void main(String[] args) throws IOException {
@@ -43,6 +44,7 @@ public class ManagerMain {
     }
 
     protected static class Auxiliary {
-        public static AtomicBoolean terminate = new AtomicBoolean(false);
+        static AtomicBoolean terminate = new AtomicBoolean(false);
+        static AtomicInteger raito = new AtomicInteger(0);
     }
 }

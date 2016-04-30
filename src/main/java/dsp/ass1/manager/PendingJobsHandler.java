@@ -52,8 +52,21 @@ public class PendingJobsHandler implements Runnable {
             } catch (IOException e) {
                 System.err.println("Error with job: " + jobObjectKey);
                 e.printStackTrace();
+                //TODO why are we continuing here ? what about cleaning files and messages ?
                 continue;
             }
+
+            /* getting workers ratio */
+            if(!jobMessage.getMessageAttributes().containsKey(Settings.RATIO_ATTRIBUTE)) {
+                System.err.println("Error with job: " + job.getId() + " can't find ratio");
+                //TODO why are we continuing here ? what about cleaning files and messages ?
+                continue;
+            }
+
+            /* updating ratio from current job */
+            int ratio = Integer.parseInt(jobMessage.getMessageAttributes().get(Settings.RATIO_ATTRIBUTE).toString());
+            if((ManagerMain.Auxiliary.raito.get() ==0) || (ManagerMain.Auxiliary.raito.get() > ratio))
+                ManagerMain.Auxiliary.raito.set(ratio);
 
             allJobs.put(job.getId(), job);
             System.out.println("Dispatching tweet tasks for job " + job.getId() + " to SQS");
@@ -64,7 +77,7 @@ public class PendingJobsHandler implements Runnable {
             }
 
             if (jobMessage.getMessageAttributes().containsKey(Settings.TERMINATION_ATTRIBUTE)) {
-                System.out.println("Terminating...");
+                System.out.println("Received termination request, all new jobs will be refused...");
                 ManagerMain.Auxiliary.terminate.set(true);
             }
 
@@ -78,7 +91,11 @@ public class PendingJobsHandler implements Runnable {
 
             if (message != null) {
                 String jobId = message.getMessageId();
+                String jobObjectKey = message.getBody();
                 sqs.removeMsgFromQueue(SQSHelper.Queues.PENDING_JOBS, message);
+
+                /* clearing s3 from refused job's file ! */
+                s3.removeObject(jobObjectKey);
 
                 Map<String, String> attributes = new HashMap<String, String>();
                 attributes.put(jobId, "true");

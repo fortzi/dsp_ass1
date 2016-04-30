@@ -15,6 +15,7 @@ public class Settings {
     public final static String  TERMINATION_ATTRIBUTE = "terminate";
     public final static String  JOB_ID_ATTRIBUTE      = "job_id";
     public final static String  REFUSE_ATTRIBUTE      = "job_refused";
+    public final static String  RATIO_ATTRIBUTE       = "workers_files_ratio";
     public final static String  BUCKET_NAME           = "dsp-ass1";
     public final static String  HTTP_ERROR            = "Error 404: Cannot access tweet ";
     public final static String  INSTANCE_WORKER       = "worker";
