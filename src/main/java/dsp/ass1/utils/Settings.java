@@ -20,6 +20,7 @@ public class Settings {
     public final static String  HTTP_ERROR            = "Error 404: Cannot access tweet ";
     public final static String  INSTANCE_WORKER       = "worker";
     public final static String  INSTANCE_MANAGER      = "manager";
+    public final static String  ERROR_ATTRIBUTE       = "error_in_manager";
 }
 
 //TODO add function to send N number of messages at the same time (for termination, for tweets)

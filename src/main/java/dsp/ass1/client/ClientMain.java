@@ -70,11 +70,8 @@ public class ClientMain {
         System.out.println("waiting for job to finish");
         String resultFileKey = waitAndGetResultsFile(myId);
 
-        if(resultFileKey == null) {
-            System.out.println("job refused! manager not accepting any more jobs.");
-            System.out.println("please try again later.");
+        if(resultFileKey == null)
             return;
-        }
 
         System.out.println("job finished! parsing results file.");
         try {
@@ -122,8 +119,17 @@ public class ClientMain {
         Message msg = sqs.getMsgFromQueue(SQSHelper.Queues.FINISHED_JOBS, myId);
         sqs.removeMsgFromQueue(SQSHelper.Queues.FINISHED_JOBS, msg);
 
-        if(msg.getMessageAttributes().containsKey(Settings.REFUSE_ATTRIBUTE))
+        if(msg.getMessageAttributes().containsKey(Settings.REFUSE_ATTRIBUTE)) {
+            System.out.println("job refused! manager not accepting any more jobs.");
+            System.out.println("please try again later.");
             return null;
+        }
+
+        if(msg.getMessageAttributes().containsKey(Settings.ERROR_ATTRIBUTE)) {
+            System.out.println("job canceled ! error in manager operation");
+            System.out.println("message from manager: " + msg.getBody());
+            return null;
+        }
 
         return msg.getBody();
     }

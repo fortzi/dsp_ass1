@@ -50,20 +50,15 @@ public class PendingJobsHandler implements Runnable {
                 job = new Job(rawJob.split("\n"), jobMessage.getMessageId());
                 s3.removeObject(jobObject);
             } catch (IOException e) {
-                System.err.println("Error with job: " + jobObjectKey);
-                e.printStackTrace();
-                sqs.sendMsgToQueue(SQSHelper.Queues.DEBUGGING, "JobHandler: Error with file from job " + jobMessage.getMessageId());
-                sqs.removeMsgFromQueue(SQSHelper.Queues.PENDING_JOBS, jobMessage);
-                //TODO why are we continuing here ? what about cleaning files and messages ?
+                System.err.println("Error with job: " + jobObjectKey + "\n " + e.getStackTrace());
+                handle_panic(jobMessage, "JobHandler: Error with S3 object from job " + jobMessage.getMessageId());
                 continue;
             }
 
             /* getting workers ratio */
             if(!jobMessage.getMessageAttributes().containsKey(Settings.RATIO_ATTRIBUTE)) {
                 System.err.println("Error with job: " + job.getId() + " can't find ratio");
-                sqs.sendMsgToQueue(SQSHelper.Queues.DEBUGGING, "JobHandler: new job arraived without ratio settings");
-                sqs.removeMsgFromQueue(SQSHelper.Queues.PENDING_JOBS, jobMessage);
-                //TODO why are we continuing here ? what about cleaning files and messages ?
+                handle_panic(jobMessage, "JobHandler: new job arrived without ratio settings");
                 continue;
             }
 
@@ -115,5 +110,22 @@ public class PendingJobsHandler implements Runnable {
             }
         }
 
+    }
+
+    /**
+     * Removing defected message from queue and send notice back to user
+     * @param jobMessage the defected message
+     * @param err error message to be sent to user
+     */
+    private void handle_panic(Message jobMessage, String err) {
+        /* send error message to debugging queue */
+        sqs.sendMsgToQueue(SQSHelper.Queues.DEBUGGING, err);
+        /* remove defected message from SQS queue */
+        sqs.removeMsgFromQueue(SQSHelper.Queues.PENDING_JOBS, jobMessage);
+        /* send notice back to user */
+        Map<String, String> attributes = new HashMap<String, String>();
+        attributes.put(jobMessage.getMessageId(), "true");
+        attributes.put(Settings.ERROR_ATTRIBUTE, "true");
+        sqs.sendMsgToQueue(SQSHelper.Queues.FINISHED_JOBS, err, attributes);
     }
 }
