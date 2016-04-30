@@ -18,6 +18,7 @@ public class ClientMain {
 
     private SQSHelper sqs;
     private S3Helper s3;
+    private EC2Helper ec2;
     private final String[] sentiments = { "Very Negative", "Negative", "Neutral", "Positive", "Very Positive" };
 
     public static void main(String[] args) {
@@ -42,12 +43,13 @@ public class ClientMain {
     public ClientMain() {
         sqs = new SQSHelper();
         s3 = new S3Helper();
+        ec2 = new EC2Helper();
     }
 
     private void clientRun(boolean terminate, String n, String fileName) {
         System.out.println(new Timestamp((new java.util.Date()).getTime()) + " Client started.");
 
-        if(!isManagerAlive()) {
+        if(!ec2.isManagerAlive()) {
             System.out.println("Manager was not found !");
             if(!createManager()) {
                 return;
@@ -116,7 +118,21 @@ public class ClientMain {
      * @return the results file
      */
     private String waitAndGetResultsFile(String myId) {
-        Message msg = sqs.getMsgFromQueue(SQSHelper.Queues.FINISHED_JOBS, myId);
+        Message msg = null;
+
+        while(true) {
+           msg = sqs.getMsgFromQueue(SQSHelper.Queues.FINISHED_JOBS, false);
+
+            if((msg != null) && msg.getMessageAttributes().containsKey(myId))
+                break;
+
+            if(!ec2.isManagerAlive()){
+                System.out.println("PANIC! manager is dead !");
+                System.out.println("please try again later.");
+                return null;
+            }
+        }
+
         sqs.removeMsgFromQueue(SQSHelper.Queues.FINISHED_JOBS, msg);
 
         if(msg.getMessageAttributes().containsKey(Settings.REFUSE_ATTRIBUTE)) {
@@ -145,14 +161,6 @@ public class ClientMain {
         System.out.println("Manager Created !");
 
         return true;
-    }
-
-    /**
-     * find out whether there is an instance with tag "Type" as "manager
-     * @return true if the manager exists
-     */
-    private boolean isManagerAlive() {
-        return (new EC2Helper()).countInstancesOfType(Settings.INSTANCE_MANAGER) != 0;
     }
 
     /**

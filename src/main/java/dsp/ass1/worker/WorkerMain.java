@@ -3,6 +3,7 @@ package dsp.ass1.worker;
 import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.util.json.JSONException;
 import com.amazonaws.util.json.JSONObject;
+import dsp.ass1.utils.EC2Helper;
 import dsp.ass1.utils.Settings;
 import dsp.ass1.utils.S3Helper;
 import dsp.ass1.utils.SQSHelper;
@@ -37,6 +38,7 @@ public class WorkerMain {
 
     private SQSHelper sqs;
     private S3Helper s3;
+    private EC2Helper ec2;
     StanfordCoreNLP  sentimentPipeline;
     StanfordCoreNLP NERPipeline;
     private int tweetsOk;
@@ -61,6 +63,8 @@ public class WorkerMain {
     public WorkerMain() {
         sqs = new SQSHelper();
         s3 = new S3Helper();
+        ec2 = new EC2Helper();
+
         tweetsOk = 0;
         tweetsFaulty = 0;
 
@@ -82,7 +86,19 @@ public class WorkerMain {
         while(true) {
             // look for new job from pending tweets queue
             System.out.println("Waiting for new message");
-            msg = sqs.getMsgFromQueue(SQSHelper.Queues.PENDING_TWEETS, true);
+
+            while(true) {
+                msg = sqs.getMsgFromQueue(SQSHelper.Queues.PENDING_TWEETS, false);
+
+                if(!ec2.isManagerAlive()) {
+                    System.out.println("PANIC! manager is dead !");
+                    uploadStatistics();
+                    return;
+                }
+
+                if(msg != null)
+                    break;
+            }
 
             // check whether this is an termination message
             if (msg.getMessageAttributes().containsKey(Settings.TERMINATION_ATTRIBUTE)) {
@@ -124,6 +140,10 @@ public class WorkerMain {
         sqs.removeMsgFromQueue(SQSHelper.Queues.PENDING_TWEETS, msg);
 
         // upload statistics.
+        uploadStatistics();
+    }
+
+    private void uploadStatistics() throws IOException {
         System.out.println("uploading statistics");
         String id = getInstanceId();
         File statistics = createStatisticsFile(id);
@@ -231,5 +251,9 @@ public class WorkerMain {
     private String getInstanceId() throws IOException {
         Document doc = Jsoup.connect("http://169.254.169.254/latest/meta-data/instance-id").get();
         return doc.body().text();
+    }
+
+    private boolean isManagerAlive() {
+        return (new EC2Helper()).countInstancesOfType(Settings.INSTANCE_MANAGER) != 0;
     }
 }

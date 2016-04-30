@@ -43,4 +43,12 @@ public class EC2Helper {
 
         return instanceCount;
     }
+
+    /**
+     * find out whether there is an instance with tag "Type" as "manager
+     * @return true if the manager exists
+     */
+    public boolean isManagerAlive() {
+        return countInstancesOfType(Settings.INSTANCE_MANAGER) != 0;
+    }
 }

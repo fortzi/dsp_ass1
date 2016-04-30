@@ -82,32 +82,6 @@ public class SQSHelper {
             return messages.get(0);
     }
 
-    /**
-     * finds message in a given queue with the given id as attribute
-     * this function is blocking
-     * @param queue the queue to search in
-     * @param id the attribute to filter message by
-     * @return message that was found
-     */
-    public Message getMsgFromQueue(Queues queue, String id) {
-
-        List<Message> messages;
-        String queueUrl = sqs.getQueueUrl(queue.toString()).getQueueUrl();
-
-        ReceiveMessageRequest receiveRequest = new ReceiveMessageRequest(queueUrl);
-
-        receiveRequest.withMaxNumberOfMessages(1);
-        receiveRequest.withMessageAttributeNames("All");
-
-        do {
-            messages = sqs.receiveMessage(receiveRequest).getMessages();
-        } while(messages.size() == 0 || !messages.get(0).getMessageAttributes().containsKey(id));
-
-        extendMessageVisibility(queue, messages.get(0));
-
-       return messages.get(0);
-    }
-
     public void removeMsgFromQueue(Queues queue, Message msg) {
         String queueUrl = sqs.getQueueUrl(queue.toString()).getQueueUrl();
 

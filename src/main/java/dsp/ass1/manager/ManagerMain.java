@@ -5,6 +5,8 @@ package dsp.ass1.manager;
  *
  */
 
+import dsp.ass1.utils.Settings;
+
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -45,6 +47,6 @@ public class ManagerMain {
 
     protected static class Auxiliary {
         static AtomicBoolean terminate = new AtomicBoolean(false);
-        static AtomicInteger ratio = new AtomicInteger(0);
+        static AtomicInteger ratio = new AtomicInteger(Settings.TWEETS_PER_WORKER);
     }
 }

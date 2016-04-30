@@ -31,9 +31,18 @@ public class WorkersHandler implements Runnable {
         System.out.println("workers handler started");
 
         while (!ManagerMain.Auxiliary.terminate.get() || !allJobs.isEmpty()) {
-            neededWorkers =
-                    (sqs.getMsgCount(SQSHelper.Queues.PENDING_TWEETS) / ManagerMain.Auxiliary.ratio.get())
-                    - ec2.countInstancesOfType(Settings.INSTANCE_WORKER);
+
+            try {
+                neededWorkers =
+                        (sqs.getMsgCount(SQSHelper.Queues.PENDING_TWEETS) / ManagerMain.Auxiliary.ratio.get())
+                                - ec2.countInstancesOfType(Settings.INSTANCE_WORKER);
+            }
+            catch (Exception e) {
+                System.out.println("error in workers handler");
+                e.printStackTrace();
+                continue;
+            }
+
 
             System.out.println("needed workers " + neededWorkers);
 
