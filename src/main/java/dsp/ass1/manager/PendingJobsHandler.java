@@ -59,6 +59,7 @@ public class PendingJobsHandler implements Runnable {
             /* getting workers ratio */
             if(!jobMessage.getMessageAttributes().containsKey(Settings.RATIO_ATTRIBUTE)) {
                 System.err.println("Error with job: " + job.getId() + " can't find ratio");
+                sqs.sendMsgToQueue(SQSHelper.Queues.DEBUGGING, "Ma")
                 //TODO why are we continuing here ? what about cleaning files and messages ?
                 continue;
             }
