@@ -52,6 +52,8 @@ public class PendingJobsHandler implements Runnable {
             } catch (IOException e) {
                 System.err.println("Error with job: " + jobObjectKey);
                 e.printStackTrace();
+                sqs.sendMsgToQueue(SQSHelper.Queues.DEBUGGING, "JobHandler: Error with file from job " + jobMessage.getMessageId());
+                sqs.removeMsgFromQueue(SQSHelper.Queues.PENDING_JOBS, jobMessage);
                 //TODO why are we continuing here ? what about cleaning files and messages ?
                 continue;
             }
@@ -59,7 +61,8 @@ public class PendingJobsHandler implements Runnable {
             /* getting workers ratio */
             if(!jobMessage.getMessageAttributes().containsKey(Settings.RATIO_ATTRIBUTE)) {
                 System.err.println("Error with job: " + job.getId() + " can't find ratio");
-                sqs.sendMsgToQueue(SQSHelper.Queues.DEBUGGING, "Ma")
+                sqs.sendMsgToQueue(SQSHelper.Queues.DEBUGGING, "JobHandler: new job arraived without ratio settings");
+                sqs.removeMsgFromQueue(SQSHelper.Queues.PENDING_JOBS, jobMessage);
                 //TODO why are we continuing here ? what about cleaning files and messages ?
                 continue;
             }
