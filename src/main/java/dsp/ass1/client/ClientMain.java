@@ -121,16 +121,10 @@ public class ClientMain {
         Message msg = null;
 
         while(true) {
-           msg = sqs.getMsgFromQueue(SQSHelper.Queues.FINISHED_JOBS, false);
+            msg = sqs.getMsgFromQueue(SQSHelper.Queues.FINISHED_JOBS, false);
 
             if((msg != null) && msg.getMessageAttributes().containsKey(myId))
                 break;
-
-            if(!ec2.isManagerAlive()){
-                System.out.println("PANIC! manager is dead !");
-                System.out.println("please try again later.");
-                return null;
-            }
         }
 
         sqs.removeMsgFromQueue(SQSHelper.Queues.FINISHED_JOBS, msg);

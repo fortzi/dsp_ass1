@@ -61,11 +61,12 @@ public class WorkersHandler implements Runnable {
 
         System.out.println("workers handler finished");
 
-
+        //TODO keep this or delete ? since workers are killed anyway when manager died.
+        /*
         createdWorkers = ec2.countInstancesOfType(Settings.INSTANCE_WORKER);
         System.out.println("Sending termination messages to " + createdWorkers + " workers");
         while (createdWorkers-- > 0) {
             sqs.sendMsgToQueue(SQSHelper.Queues.PENDING_TWEETS, "Termination message", Settings.TERMINATION_ATTRIBUTE);
-        }
+        }*/
     }
 }
