@@ -10,6 +10,8 @@ import dsp.ass1.utils.S3Helper;
 import dsp.ass1.utils.SQSHelper;
 
 import java.io.IOException;
+import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -53,6 +55,7 @@ public class PendingJobsHandler implements Runnable {
                 s3.removeObject(jobObject);
             } catch (Exception e) {
                 System.err.println("Error with job: " + jobObjectKey);
+                e.printStackTrace();
                 handle_panic(jobMessage, "JobHandler: Error with s3 file from job " + jobMessage.getMessageId());
                 continue;
             }
@@ -91,6 +94,7 @@ public class PendingJobsHandler implements Runnable {
             Message message = sqs.getMsgFromQueue(SQSHelper.Queues.PENDING_JOBS, false);
 
             if (message != null) {
+                System.out.println("Refusing job " + message.getMessageId());
                 String jobId = message.getMessageId();
                 String jobObjectKey = message.getBody();
                 sqs.removeMsgFromQueue(SQSHelper.Queues.PENDING_JOBS, message);

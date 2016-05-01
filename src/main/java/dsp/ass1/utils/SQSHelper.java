@@ -15,10 +15,11 @@ import java.util.Map;
  */
 public class SQSHelper {
 
-    AmazonSQS sqs;
+    AmazonSQSClient sqs;
 
     public SQSHelper() {
         sqs = new AmazonSQSClient();
+
     }
 
     public String sendMsgToQueue(Queues queue, String msg) {
