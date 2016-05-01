@@ -6,6 +6,7 @@ import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.*;
 
 import java.io.*;
+import java.util.Random;
 
 /**
  * Created by Ofer Caspi on 04/02/2016.
@@ -13,9 +14,11 @@ import java.io.*;
  */
 public class S3Helper {
     AmazonS3 s3 = null;
+    Random randomizer;
 
     public S3Helper() {
         s3 = new AmazonS3Client();
+        randomizer = new Random();
     }
 
     /**
@@ -25,7 +28,7 @@ public class S3Helper {
      * @return The URL to the newly uploaded file.
      */
     public String putObject(Folders folder, File file) {
-        String objectKey = folder + "/" + file.hashCode();
+        String objectKey = folder + "/" + randomizer.nextInt();
         s3.putObject(new PutObjectRequest(Settings.BUCKET_NAME, objectKey, file));
 
         return objectKey;
