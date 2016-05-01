@@ -2,29 +2,44 @@ package dsp.ass1.manager;
 
 import java.io.*;
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by Ofer Caspi on 04/02/2016.
  *
  */
 public class Job {
-    String[] urls;
     PrintWriter results;
     File resultsFile;
-    int remainingUrls;
+    AtomicInteger remainingUrls;
     String id;
+    boolean health;
+    boolean initializing;
 
-    public Job(String[] urls, String id) throws IOException {
+    public Job(String id) throws IOException {
+        this.initializing = true;
+        this.health = true;
         this.id = id;
-        this.urls = urls;
-        this.remainingUrls = urls.length;
-        this.resultsFile = File.createTempFile(String.valueOf(Arrays.hashCode(urls)), ".txt");
+        this.remainingUrls = new AtomicInteger(0);
+        this.resultsFile = File.createTempFile("tmpfile", ".txt");
         resultsFile.deleteOnExit();
         this.results = new PrintWriter(new BufferedWriter(new FileWriter(resultsFile.getPath(), true)));
     }
 
+    public void finsishInitiazling() {
+        this.initializing = false;
+    }
+
     public File getResultsFile() {
         return resultsFile;
+    }
+
+    public void setAsBroken() {
+        this.health = false;
+    }
+
+    public void incRemainingUrls() {
+        remainingUrls.incrementAndGet();
     }
 
     public void finalize() throws Throwable {
@@ -41,14 +56,11 @@ public class Job {
     public synchronized boolean addResult(String result) {
         results.println(result);
         results.flush();
-        return --remainingUrls == 0;
+        return (remainingUrls.decrementAndGet() == 0) && !initializing;
     }
 
     public String getId() {
         return id;
     }
 
-    public String[] getUrls() {
-        return urls;
-    }
 }

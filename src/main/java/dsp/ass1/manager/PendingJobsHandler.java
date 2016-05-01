@@ -15,6 +15,8 @@ import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Created by Ofer Caspi on 04/02/2016.
@@ -23,14 +25,16 @@ import java.util.concurrent.ConcurrentHashMap;
 public class PendingJobsHandler implements Runnable {
     S3Helper s3;
     SQSHelper sqs;
-    ConcurrentHashMap<String, Job> allJobs;
+    Jobs allJobs;
     InstanceFactory workerFactory;
+    ExecutorService executor;
 
-    public PendingJobsHandler(ConcurrentHashMap<String, Job> allJobs) {
+    public PendingJobsHandler(Jobs allJobs) {
         this.s3 = new S3Helper();
         this.sqs = new SQSHelper();
         this.allJobs = allJobs;
         this.workerFactory = new InstanceFactory(Settings.INSTANCE_WORKER);
+        this.executor = Executors.newFixedThreadPool(10);
     }
 
     public void run() {
@@ -48,16 +52,19 @@ public class PendingJobsHandler implements Runnable {
             S3Object jobObject;
 
             try {
-                System.out.println("Retrieving job contents from S3");
-                jobObject = s3.getObject(jobObjectKey);
-                String rawJob = S3Helper.getStringFromInputStream(jobObject.getObjectContent());
-                job = new Job(rawJob.split("\n"), jobMessage.getMessageId());
-                s3.removeObject(jobObject);
+                job = new Job(jobMessage.getMessageId());
+                allJobs.put(job.getId(), job);
+                executor.submit(new JobParser(jobObjectKey, job));
             } catch (Exception e) {
                 System.err.println("Error with job: " + jobObjectKey);
                 e.printStackTrace();
-                handle_panic(jobMessage, "JobHandler: Error with s3 file from job " + jobMessage.getMessageId());
+                handle_panic(jobMessage, "JobHandler: Error creating new job tmp file " + jobMessage.getMessageId());
                 continue;
+            }
+
+            if (jobMessage.getMessageAttributes().containsKey(Settings.TERMINATION_ATTRIBUTE)) {
+                System.out.println("Received termination request, all new jobs will be refused...");
+                ManagerMain.Auxiliary.terminate.set(true);
             }
 
             /* getting workers ratio */
@@ -72,22 +79,12 @@ public class PendingJobsHandler implements Runnable {
             if((ManagerMain.Auxiliary.ratio.get() > ratio) || (ManagerMain.Auxiliary.ratio.get() == 0))
                 ManagerMain.Auxiliary.ratio.set(ratio);
 
-            allJobs.put(job.getId(), job);
-            System.out.println("Dispatching tweet tasks for job " + job.getId() + " to SQS");
-            Map<String, String> attributes = new HashMap<String, String>();
-            attributes.put(Settings.JOB_ID_ATTRIBUTE, job.getId());
-            for (String tweetURL : job.getUrls()) {
-                sqs.sendMsgToQueue(SQSHelper.Queues.PENDING_TWEETS, tweetURL, attributes);
-            }
-
-            if (jobMessage.getMessageAttributes().containsKey(Settings.TERMINATION_ATTRIBUTE)) {
-                System.out.println("Received termination request, all new jobs will be refused...");
-                ManagerMain.Auxiliary.terminate.set(true);
-            }
-
             System.out.println("Removing job " + job.getId() + " from pending jobs SQS queue");
             sqs.removeMsgFromQueue(SQSHelper.Queues.PENDING_JOBS, jobMessage);
         }
+
+        //TODO should we wait for all jobParser to finish ? maybe bot beacsue then alljobs.isempty always be negative
+        executor.shutdown();
 
         // Actively refuse incoming requests until done
         while (!allJobs.isEmpty()) {
@@ -135,4 +132,6 @@ public class PendingJobsHandler implements Runnable {
         /* remove defected message from SQS queue */
         sqs.removeMsgFromQueue(SQSHelper.Queues.PENDING_JOBS, jobMessage);
     }
+
+
 }

@@ -44,18 +44,8 @@ public class S3Helper {
         return s3.getObject(new GetObjectRequest(Settings.BUCKET_NAME, objectKey));
     }
 
-    public static String getStringFromInputStream(InputStream input) throws IOException {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(input));
-        StringBuilder result = new StringBuilder();
-
-        while (true) {
-            String line = reader.readLine();
-            if (line == null) break;
-
-            result.append(line).append("\n");
-        }
-
-        return result.toString();
+    public BufferedReader getLineReaderFromObject(S3Object object) throws IOException {
+        return new BufferedReader(new InputStreamReader(object.getObjectContent()));
     }
 
     public void removeObject(String objectKey) {

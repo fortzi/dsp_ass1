@@ -19,7 +19,7 @@ public class ManagerMain {
     public static void main(String[] args) throws IOException {
         System.out.println("Starting manager node");
 
-        ConcurrentHashMap<String, Job> allJobs = new ConcurrentHashMap<String, Job>();
+        Jobs allJobs = new Jobs();
 
         ExecutorService executor = Executors.newFixedThreadPool(7);
 
