@@ -8,7 +8,6 @@ package dsp.ass1.manager;
 import dsp.ass1.utils.Settings;
 
 import java.io.IOException;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -41,6 +40,8 @@ public class ManagerMain {
             System.err.println("Threads interrupted.");
             e.printStackTrace();
         }
+
+
 
         System.out.println("Terminating manager node");
     }

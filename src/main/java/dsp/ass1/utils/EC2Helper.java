@@ -51,4 +51,13 @@ public class EC2Helper {
     public boolean isManagerAlive() {
         return countInstancesOfType(Settings.INSTANCE_MANAGER) != 0;
     }
+
+    public void sleep(String caller) {
+        try {
+            Thread.sleep(Settings.SLEEP_INTERVAL * 2);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            new SQSHelper().sendMsgToQueue(SQSHelper.Queues.DEBUGGING, "sleep interrupted in " + caller + ": " + e.getMessage());
+        }
+    }
 }

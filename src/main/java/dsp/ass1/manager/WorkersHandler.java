@@ -43,17 +43,18 @@ public class WorkersHandler implements Runnable {
                     continue;
                 }
 
-
                 System.out.println("needed workers " + neededWorkers);
 
                 if (neededWorkers > 0) {
                     System.out.println("Trying to create " + neededWorkers + " new workers");
                     createdWorkers = workerFactory.makeInstances(neededWorkers);
                     System.out.println("Created " + createdWorkers + " new workers");
+                    ec2.sleep("WorkersHandler");
                 }
-
-                sqs.sleep("WorkersHandler");
+                else
+                    sqs.sleep("WorkersHandler");
             }
+
 
             System.out.println("workers handler finished");
         }

@@ -31,8 +31,6 @@ import edu.stanford.nlp.util.CoreMap;
 import java.util.HashMap;
 import java.util.Map;
 
-import static java.lang.Thread.sleep;
-
 /**
  * Created by doubled
  */
@@ -95,7 +93,8 @@ public class WorkerMain {
                 if(msg != null)
                     break;
 
-                sqs.sleep("WorkerMain");
+                /* using ec2 sleep which sleep double the time of sqs sleep function */
+                ec2.sleep("WorkerMain");
             }
 
             // check whether this is an termination message
