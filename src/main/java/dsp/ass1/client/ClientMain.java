@@ -125,6 +125,14 @@ public class ClientMain {
 
             if((msg != null) && msg.getMessageAttributes().containsKey(myId))
                 break;
+
+            /* if no new message the sleep a while */
+            try {
+                Thread.sleep(Settings.SLEEP_INTERVAL);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+                sqs.sendMsgToQueue(SQSHelper.Queues.DEBUGGING, "error in client main: " + e.getMessage());
+            }
         }
 
         sqs.removeMsgFromQueue(SQSHelper.Queues.FINISHED_JOBS, msg);
