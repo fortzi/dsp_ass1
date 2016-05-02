@@ -32,7 +32,9 @@ public class ClientMain {
         boolean terminate = args.length > 2 && "terminate".equals(args[2]);
 
         /* making sure second argument is really a number */
-        try { Integer.parseInt(args[1]); } catch (Exception e) {
+        try { //noinspection ResultOfMethodCallIgnored
+            Integer.parseInt(args[1]);
+        } catch (Exception e) {
             System.out.println("second argument should be a number");
             return;
         }
@@ -118,7 +120,7 @@ public class ClientMain {
      * @return the results file
      */
     private String waitAndGetResultsFile(String myId) {
-        Message msg = null;
+        Message msg;
 
         while(true) {
             msg = sqs.getMsgFromQueue(SQSHelper.Queues.FINISHED_JOBS);

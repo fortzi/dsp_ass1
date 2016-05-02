@@ -1,20 +1,13 @@
 package dsp.ass1.manager;
 
-import com.amazonaws.AmazonClientException;
-import com.amazonaws.services.s3.model.AmazonS3Exception;
-import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.sqs.model.Message;
-import dsp.ass1.utils.Settings;
 import dsp.ass1.utils.InstanceFactory;
 import dsp.ass1.utils.S3Helper;
 import dsp.ass1.utils.SQSHelper;
+import dsp.ass1.utils.Settings;
 
-import java.io.IOException;
-import java.io.PrintStream;
-import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -45,7 +38,7 @@ public class PendingJobsHandler implements Runnable {
         while (!ManagerMain.Auxiliary.terminate.get()) {
             System.out.println("Waiting for jobs");
 
-            while((jobMessage = sqs.getMsgFromQueue(SQSHelper.Queues.PENDING_JOBS)) != null) {
+            while((jobMessage = sqs.getMsgFromQueue(SQSHelper.Queues.PENDING_JOBS)) == null) {
                 sqs.sleep("PendingJobsHandler");
             }
 
@@ -55,7 +48,6 @@ public class PendingJobsHandler implements Runnable {
 
             String jobObjectKey = jobMessage.getBody();
             Job job;
-            S3Object jobObject;
 
             try {
                 job = new Job(jobMessage.getMessageId());
