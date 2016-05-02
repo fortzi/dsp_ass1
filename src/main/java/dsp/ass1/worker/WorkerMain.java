@@ -31,6 +31,8 @@ import edu.stanford.nlp.util.CoreMap;
 import java.util.HashMap;
 import java.util.Map;
 
+import static java.lang.Thread.sleep;
+
 /**
  * Created by doubled
  */
@@ -47,12 +49,6 @@ public class WorkerMain {
     public static void main(String[] args) {
         try {
             new WorkerMain().WorkerRun();
-        } catch (JSONException e) {
-            new SQSHelper().sendMsgToQueue(SQSHelper.Queues.DEBUGGING,e.getMessage());
-            e.printStackTrace();
-        } catch (IOException e) {
-            new SQSHelper().sendMsgToQueue(SQSHelper.Queues.DEBUGGING,e.getMessage());
-            e.printStackTrace();
         } catch (Exception e) {
             new SQSHelper().sendMsgToQueue(SQSHelper.Queues.DEBUGGING,e.getMessage());
             e.printStackTrace();
@@ -98,6 +94,13 @@ public class WorkerMain {
 
                 if(msg != null)
                     break;
+
+                try {
+                    sleep(Settings.SLEEP_INTERVAL);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                    sqs.sendMsgToQueue(SQSHelper.Queues.DEBUGGING, "worker error in sleep " + e.getMessage());
+                }
             }
 
             // check whether this is an termination message
@@ -253,7 +256,4 @@ public class WorkerMain {
         return doc.body().text();
     }
 
-    private boolean isManagerAlive() {
-        return (new EC2Helper()).countInstancesOfType(Settings.INSTANCE_MANAGER) != 0;
-    }
 }

@@ -27,40 +27,43 @@ public class WorkersHandler implements Runnable {
     public void run() {
         int neededWorkers;
         int createdWorkers;
+        try {
 
-        System.out.println("workers handler started");
+            System.out.println("workers handler started");
 
-        while (!ManagerMain.Auxiliary.terminate.get() || !allJobs.isEmpty()) {
+            while (!ManagerMain.Auxiliary.terminate.get() || !allJobs.isEmpty()) {
 
-            try {
-                neededWorkers =
-                        (sqs.getMsgCount(SQSHelper.Queues.PENDING_TWEETS) / ManagerMain.Auxiliary.ratio.get())
-                                - ec2.countInstancesOfType(Settings.INSTANCE_WORKER);
+                try {
+                    neededWorkers =
+                            (sqs.getMsgCount(SQSHelper.Queues.PENDING_TWEETS) / ManagerMain.Auxiliary.ratio.get())
+                                    - ec2.countInstancesOfType(Settings.INSTANCE_WORKER);
+                } catch (Exception e) {
+                    System.out.println("error in workers handler");
+                    e.printStackTrace();
+                    continue;
+                }
+
+
+                System.out.println("needed workers " + neededWorkers);
+
+                if (neededWorkers > 0) {
+                    System.out.println("Trying to create " + neededWorkers + " new workers");
+                    createdWorkers = workerFactory.makeInstances(neededWorkers);
+                    System.out.println("Created " + createdWorkers + " new workers");
+                }
+
+                try {
+                    Thread.sleep(Settings.SLEEP_INTERVAL);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
-            catch (Exception e) {
-                System.out.println("error in workers handler");
-                e.printStackTrace();
-                continue;
-            }
 
-
-            System.out.println("needed workers " + neededWorkers);
-
-            if (neededWorkers > 0) {
-                System.out.println("Trying to create " + neededWorkers + " new workers");
-                createdWorkers = workerFactory.makeInstances(neededWorkers);
-                System.out.println("Created " + createdWorkers + " new workers");
-            }
-
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            System.out.println("workers handler finished");
         }
-
-        System.out.println("workers handler finished");
-
+        catch (Exception e) {
+            sqs.sendMsgToQueue(SQSHelper.Queues.DEBUGGING, "error in workers handler " + e.getMessage());
+        }
         //TODO keep this or delete ? since workers are killed anyway when manager died.
         /*
         createdWorkers = ec2.countInstancesOfType(Settings.INSTANCE_WORKER);
