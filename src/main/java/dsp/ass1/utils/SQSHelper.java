@@ -93,6 +93,15 @@ public class SQSHelper {
         sqs.changeMessageVisibility(visibilityRequest);
     }
 
+    public void sleep(String caller) {
+        try {
+            Thread.sleep(Settings.SLEEP_INTERVAL);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            sendMsgToQueue(SQSHelper.Queues.DEBUGGING, "sleep interrupted in " + caller + ": " + e.getMessage());
+        }
+    }
+
     public enum Queues {
         PENDING_JOBS {
             public String toString() {

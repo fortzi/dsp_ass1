@@ -38,11 +38,17 @@ public class PendingJobsHandler implements Runnable {
     }
 
     public void run() {
+        Message jobMessage;
+
         System.out.println("Starting pending jobs handler");
 
         while (!ManagerMain.Auxiliary.terminate.get()) {
             System.out.println("Waiting for jobs");
-            Message jobMessage = sqs.getMsgFromQueue(SQSHelper.Queues.PENDING_JOBS);
+
+            while((jobMessage = sqs.getMsgFromQueue(SQSHelper.Queues.PENDING_JOBS)) != null) {
+                sqs.sleep("PendingJobsHandler");
+            }
+
             System.out.println("Found new job");
 
             sqs.extendMessageVisibility(SQSHelper.Queues.PENDING_JOBS, jobMessage);
@@ -104,11 +110,7 @@ public class PendingJobsHandler implements Runnable {
                 attributes.put(Settings.REFUSE_ATTRIBUTE, "true");
                 sqs.sendMsgToQueue(SQSHelper.Queues.FINISHED_JOBS, "Message refused - Manager is terminating.", attributes);
             } else {
-                try {
-                    Thread.sleep(Settings.SLEEP_INTERVAL);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+                sqs.sleep("PendingJobHandler Refuse Section");
             }
         }
 

@@ -95,12 +95,7 @@ public class WorkerMain {
                 if(msg != null)
                     break;
 
-                try {
-                    sleep(Settings.SLEEP_INTERVAL);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                    sqs.sendMsgToQueue(SQSHelper.Queues.DEBUGGING, "worker error in sleep " + e.getMessage());
-                }
+                sqs.sleep("WorkerMain");
             }
 
             // check whether this is an termination message
