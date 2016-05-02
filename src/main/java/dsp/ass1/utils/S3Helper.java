@@ -28,7 +28,7 @@ public class S3Helper {
      * @return The URL to the newly uploaded file.
      */
     public String putObject(Folders folder, File file) {
-        String objectKey = folder + "/" + randomizer.nextInt();
+        String objectKey = folder + "/" + randomizer.nextLong();
         s3.putObject(new PutObjectRequest(Settings.BUCKET_NAME, objectKey, file));
 
         return objectKey;
