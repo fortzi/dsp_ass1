@@ -1,7 +1,6 @@
 package dsp.ass1.manager;
 
 import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.sqs.model.Message;
 import dsp.ass1.utils.S3Helper;
 import dsp.ass1.utils.SQSHelper;
 import dsp.ass1.utils.Settings;
@@ -11,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ *
  * Created by doubled on 0002, 02, 5, 2016.
  */
 public class JobParser implements Runnable {
@@ -49,14 +49,13 @@ public class JobParser implements Runnable {
                 job.incRemainingUrls();
             }
 
-            job.finsishInitiazling();
+            job.finishInitializing();
 
         } catch (Exception e) {
             System.err.println("Error with job: " + jobObjectKey);
             e.printStackTrace();
             job.setAsBroken();
             handle_panic(job, "JobHandler: Error with s3 file from job " + job.getId());
-            return;
         }
     }
 

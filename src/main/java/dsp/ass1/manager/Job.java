@@ -1,7 +1,6 @@
 package dsp.ass1.manager;
 
 import java.io.*;
-import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -26,7 +25,7 @@ public class Job {
         this.results = new PrintWriter(new BufferedWriter(new FileWriter(resultsFile.getPath(), true)));
     }
 
-    public void finsishInitiazling() {
+    public void finishInitializing() {
         this.initializing = false;
     }
 

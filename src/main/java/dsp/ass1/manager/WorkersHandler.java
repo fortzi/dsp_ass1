@@ -52,11 +52,7 @@ public class WorkersHandler implements Runnable {
                     System.out.println("Created " + createdWorkers + " new workers");
                 }
 
-                try {
-                    Thread.sleep(Settings.SLEEP_INTERVAL);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+                sqs.sleep("WorkersHandler");
             }
 
             System.out.println("workers handler finished");
