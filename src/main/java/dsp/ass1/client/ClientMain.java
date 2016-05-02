@@ -121,7 +121,7 @@ public class ClientMain {
         Message msg = null;
 
         while(true) {
-            msg = sqs.getMsgFromQueue(SQSHelper.Queues.FINISHED_JOBS, false);
+            msg = sqs.getMsgFromQueue(SQSHelper.Queues.FINISHED_JOBS);
 
             if((msg != null) && msg.getMessageAttributes().containsKey(myId))
                 break;

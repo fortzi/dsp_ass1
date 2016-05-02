@@ -21,7 +21,7 @@ public class Settings {
     public final static String  INSTANCE_WORKER       = "worker";
     public final static String  INSTANCE_MANAGER      = "manager";
     public final static String  ERROR_ATTRIBUTE       = "error_in_manager";
-    public final static int     SLEEP_INTERVAL        = 1000;
+    public final static int     SLEEP_INTERVAL        = 500;
 }
 
 //TODO add function to send N number of messages at the same time (for termination, for tweets)

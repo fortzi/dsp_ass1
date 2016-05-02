@@ -84,7 +84,7 @@ public class WorkerMain {
             System.out.println("Waiting for new message");
 
             while(true) {
-                msg = sqs.getMsgFromQueue(SQSHelper.Queues.PENDING_TWEETS, false);
+                msg = sqs.getMsgFromQueue(SQSHelper.Queues.PENDING_TWEETS);
 
                 if(!ec2.isManagerAlive()) {
                     System.out.println("PANIC! manager is dead !");

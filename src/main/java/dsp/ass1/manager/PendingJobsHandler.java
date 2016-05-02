@@ -88,7 +88,7 @@ public class PendingJobsHandler implements Runnable {
 
         // Actively refuse incoming requests until done
         while (!allJobs.isEmpty()) {
-            Message message = sqs.getMsgFromQueue(SQSHelper.Queues.PENDING_JOBS, false);
+            Message message = sqs.getMsgFromQueue(SQSHelper.Queues.PENDING_JOBS);
 
             if (message != null) {
                 System.out.println("Refusing job " + message.getMessageId());
@@ -103,13 +103,12 @@ public class PendingJobsHandler implements Runnable {
                 attributes.put(jobId, "true");
                 attributes.put(Settings.REFUSE_ATTRIBUTE, "true");
                 sqs.sendMsgToQueue(SQSHelper.Queues.FINISHED_JOBS, "Message refused - Manager is terminating.", attributes);
-            }
-
-            try {
-                // Don't busy wait too intensely
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            } else {
+                try {
+                    Thread.sleep(Settings.SLEEP_INTERVAL);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         }
 
