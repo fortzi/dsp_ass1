@@ -13,14 +13,14 @@ import java.util.Map;
  *
  * Created by doubled on 0002, 02, 5, 2016.
  */
-public class JobParser implements Runnable {
+class JobParser implements Runnable {
 
-    String jobObjectKey;
-    Job job;
-    S3Helper s3;
-    SQSHelper sqs;
+    private String jobObjectKey;
+    private Job job;
+    private S3Helper s3;
+    private SQSHelper sqs;
 
-    public JobParser(String jobObjectKey, Job job) {
+    JobParser(String jobObjectKey, Job job) {
         this.jobObjectKey = jobObjectKey;
         this.job = job;
 
@@ -55,7 +55,7 @@ public class JobParser implements Runnable {
             System.err.println("Error with job: " + jobObjectKey);
             e.printStackTrace();
             job.setAsBroken();
-            handle_panic(job, "JobHandler: Error with s3 file from job " + job.getId());
+            handle_panic(job,e,"JobHandler: Error with s3 file from job " + job.getId());
         }
     }
 
@@ -64,10 +64,10 @@ public class JobParser implements Runnable {
      * @param job the defected job
      * @param err error message to be sent to user
      */
-    private void handle_panic(Job job, String err) {
+    private void handle_panic(Job job, Exception e,String err) {
         System.out.println("~@~ error");
         /* send error message to debugging queue */
-        sqs.sendMsgToQueue(SQSHelper.Queues.DEBUGGING, err);
+        sqs.debug(e,err);
         /* send notice back to user */
         Map<String, String> attributes = new HashMap<String, String>();
         attributes.put(job.getId(), "true");

@@ -15,22 +15,28 @@ import java.util.concurrent.Executors;
  * Created by Ofer Caspi on 04/02/2016.
  *
  */
-public class PendingJobsHandler implements Runnable {
-    S3Helper s3;
-    SQSHelper sqs;
-    Jobs allJobs;
-    InstanceFactory workerFactory;
-    ExecutorService executor;
+class PendingJobsHandler implements Runnable {
+    private S3Helper s3;
+    private SQSHelper sqs;
+    private Jobs allJobs;
+    private ExecutorService executor;
 
-    public PendingJobsHandler(Jobs allJobs) {
+    PendingJobsHandler(Jobs allJobs) {
         this.s3 = new S3Helper();
         this.sqs = new SQSHelper();
         this.allJobs = allJobs;
-        this.workerFactory = new InstanceFactory(Settings.INSTANCE_WORKER);
         this.executor = Executors.newFixedThreadPool(10);
     }
 
     public void run() {
+        try {
+            runMethod();
+        } catch (Exception e) {
+            sqs.debug(e);
+        }
+    }
+
+    private void runMethod() {
         Message jobMessage;
 
         System.out.println("Starting pending jobs handler");
@@ -56,7 +62,7 @@ public class PendingJobsHandler implements Runnable {
             } catch (Exception e) {
                 System.err.println("Error with job: " + jobObjectKey);
                 e.printStackTrace();
-                handle_panic(jobMessage, "JobHandler: Error creating new job tmp file " + jobMessage.getMessageId());
+                handle_panic(jobMessage,e,"JobHandler: Error creating new job tmp file " + jobMessage.getMessageId());
                 continue;
             }
 
@@ -66,14 +72,9 @@ public class PendingJobsHandler implements Runnable {
             }
 
             /* getting workers ratio */
-            if(!jobMessage.getMessageAttributes().containsKey(Settings.RATIO_ATTRIBUTE)) {
-                System.err.println("Error with job: " + job.getId() + " can't find ratio");
-                handle_panic(jobMessage, "JobHandler: new job arrived without ratio settings");
-                continue;
-            }
+            int ratio = Integer.parseInt(jobMessage.getMessageAttributes().get(Settings.RATIO_ATTRIBUTE).getStringValue());
 
             /* updating ratio from current job */
-            int ratio = Integer.parseInt(jobMessage.getMessageAttributes().get(Settings.RATIO_ATTRIBUTE).getStringValue());
             if((ManagerMain.Auxiliary.ratio.get() > ratio) || (ManagerMain.Auxiliary.ratio.get() == 0))
                 ManagerMain.Auxiliary.ratio.set(ratio);
 
@@ -113,10 +114,9 @@ public class PendingJobsHandler implements Runnable {
      * @param jobMessage the defected message
      * @param err error message to be sent to user
      */
-    private void handle_panic(Message jobMessage, String err) {
-        System.out.println("~@~ error");
+    private void handle_panic(Message jobMessage, Exception e, String err) {
         /* send error message to debugging queue */
-        sqs.sendMsgToQueue(SQSHelper.Queues.DEBUGGING, err);
+        sqs.debug(e,err);
         /* send notice back to user */
         Map<String, String> attributes = new HashMap<String, String>();
         attributes.put(jobMessage.getMessageId(), "true");

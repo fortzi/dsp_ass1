@@ -57,7 +57,7 @@ public class EC2Helper {
             Thread.sleep(Settings.SLEEP_INTERVAL * 2);
         } catch (InterruptedException e) {
             e.printStackTrace();
-            new SQSHelper().sendMsgToQueue(SQSHelper.Queues.DEBUGGING, "sleep interrupted in " + caller + ": " + e.getMessage());
+            new SQSHelper().debug(e, "sleep interapted in " + caller);
         }
     }
 }

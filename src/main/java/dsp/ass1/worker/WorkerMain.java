@@ -39,25 +39,29 @@ public class WorkerMain {
     private SQSHelper sqs;
     private S3Helper s3;
     private EC2Helper ec2;
-    StanfordCoreNLP  sentimentPipeline;
-    StanfordCoreNLP NERPipeline;
+    private StanfordCoreNLP  sentimentPipeline;
+    private StanfordCoreNLP NERPipeline;
     private int tweetsOk;
     private int tweetsFaulty;
+    private LivenessHandler liveness;
 
     public static void main(String[] args) {
         try {
             new WorkerMain().WorkerRun();
         } catch (Exception e) {
-            new SQSHelper().sendMsgToQueue(SQSHelper.Queues.DEBUGGING,e.getMessage());
+            new SQSHelper().debug(e);
             e.printStackTrace();
         }
 
     }
 
-    public WorkerMain() {
+    private WorkerMain() {
         sqs = new SQSHelper();
         s3 = new S3Helper();
         ec2 = new EC2Helper();
+        liveness = new LivenessHandler();
+
+        new Thread(liveness).start();
 
         tweetsOk = 0;
         tweetsFaulty = 0;
@@ -84,17 +88,17 @@ public class WorkerMain {
             while(true) {
                 msg = sqs.getMsgFromQueue(SQSHelper.Queues.PENDING_TWEETS);
 
-                if(!ec2.isManagerAlive()) {
-                    System.out.println("PANIC! manager is dead !");
+                if(msg != null)
+                    break;
+
+                if(!liveness.isAlive()) {
+                    System.out.println("manager is dead ! exiting !");
                     uploadStatistics();
                     return;
                 }
 
-                if(msg != null)
-                    break;
-
                 /* using ec2 sleep which sleep double the time of sqs sleep function */
-                ec2.sleep("WorkerMain");
+                sqs.sleep("WorkerMain");
             }
 
             // check whether this is an termination message

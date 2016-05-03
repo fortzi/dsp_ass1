@@ -1,6 +1,7 @@
 package dsp.ass1.manager;
 
 import com.amazonaws.services.sqs.model.Message;
+import dsp.ass1.utils.EC2Helper;
 import dsp.ass1.utils.Settings;
 import dsp.ass1.utils.S3Helper;
 import dsp.ass1.utils.SQSHelper;
@@ -12,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Created by Ofer Caspi on 04/02/2016.
  *
  */
-public class FinishedTweetsHandler implements Runnable {
+class FinishedTweetsHandler implements Runnable {
     /*
     Get tweet-result from SQS
     For each result:
@@ -23,17 +24,25 @@ public class FinishedTweetsHandler implements Runnable {
             Finalize local job state
      */
 
-    S3Helper s3;
-    SQSHelper sqs;
-    ConcurrentHashMap<String, Job> allJobs;
+    private S3Helper s3;
+    private SQSHelper sqs;
+    private ConcurrentHashMap<String, Job> allJobs;
 
-    public FinishedTweetsHandler(ConcurrentHashMap<String, Job> allJobs) {
+    FinishedTweetsHandler(ConcurrentHashMap<String, Job> allJobs) {
         this.s3 = new S3Helper();
         this.sqs = new SQSHelper();
         this.allJobs = allJobs;
     }
 
     public void run() {
+        try {
+            runMethod();
+        } catch (Exception e) {
+            sqs.debug(e);
+        }
+    }
+
+    private void runMethod() {
         System.out.println("Starting finished tweets handler");
         boolean isJobComplete;
 

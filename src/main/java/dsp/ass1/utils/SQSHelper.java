@@ -13,14 +13,14 @@ import java.util.Map;
  */
 public class SQSHelper {
 
-    AmazonSQSClient sqs;
+    private AmazonSQSClient sqs;
 
     public SQSHelper() {
         sqs = new AmazonSQSClient();
 
     }
 
-    public String sendMsgToQueue(Queues queue, String msg) {
+    private String sendMsgToQueue(Queues queue, String msg) {
         return sendMsgToQueue(queue, msg, new HashMap<String,String>());
     }
 
@@ -96,8 +96,37 @@ public class SQSHelper {
             Thread.sleep(Settings.SLEEP_INTERVAL);
         } catch (InterruptedException e) {
             e.printStackTrace();
-            sendMsgToQueue(SQSHelper.Queues.DEBUGGING, "sleep interrupted in " + caller + ": " + e.getMessage());
+            debug(e,"sleep interrupted in " + caller);
         }
+    }
+
+    public void debug(Exception e, String msg) {
+        String className, methodName;
+        StringBuilder content = new StringBuilder();
+
+        if(e.getStackTrace().length > 0) {
+            className = e.getStackTrace()[0].getClassName();
+            methodName = e.getStackTrace()[0].getMethodName();
+        }
+        else {
+            className = "Unkown class";
+            methodName = "Unkown method";
+        }
+
+        content.append("Exception in ").append(className).append(":").append(methodName).append("\n");
+        content.append("Exception Message: ").append(e.getMessage()).append("\n");
+        if(msg!=null)
+            content.append("additional Message: ").append(msg).append("\n");
+        content.append("Full stack trace: \n");
+
+        for(StackTraceElement element : e.getStackTrace())
+            content.append(element.toString()).append("\n");
+
+        sendMsgToQueue(SQSHelper.Queues.DEBUGGING,  content.toString());
+    }
+
+    public void debug(Exception e) {
+        debug(e,null);
     }
 
     public enum Queues {
