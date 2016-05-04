@@ -5,10 +5,10 @@ import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.*;
 import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.model.PurgeQueueRequest;
+import dsp.ass1.utils.S3Helper;
 import dsp.ass1.utils.Settings;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 
 /**
@@ -16,20 +16,27 @@ import java.util.ArrayList;
  */
 public class DeployMain {
 
+    private static boolean clean = true;
+    private static boolean repackage = false;
+    private static boolean statistics = true;
+
+
     public static void main(String[] args) {
 
         try {
             System.out.println("start deplyoment");
 
-            purgeQueues();
+            if(repackage) makePackageFile();
 
-            s3cleanFolder("statistics");
-            s3cleanFolder("pending-jobs");
-            s3cleanFolder("finished-jobs");
+            if(statistics) getStatistics();
 
-            //makePackageFile();
+            if(clean) purgeQueues();
 
-            uploadPackageFile();
+            if(clean) s3cleanFolder("statistics");
+            if(clean) s3cleanFolder("pending-jobs");
+            if(clean) s3cleanFolder("finished-jobs");
+
+            if(repackage) uploadPackageFile();
 
             System.out.println("done deplyoment");
         }
@@ -121,5 +128,35 @@ public class DeployMain {
         PutObjectRequest putReq = new PutObjectRequest(Settings.BUCKET_NAME, objectKey, file);
         putReq.withCannedAcl(CannedAccessControlList.PublicRead);
         s3.putObject(putReq);
+    }
+
+    private static void getStatistics() throws IOException {
+        AmazonS3 s3 = new AmazonS3Client();
+        PrintWriter writer = new PrintWriter("statistics.txt");
+        ObjectListing listing;
+        InputStream stream;
+        String line;
+        BufferedReader reader;
+        int i=0;
+        ListObjectsRequest listObjectsRequest = new ListObjectsRequest()
+                .withBucketName(Settings.BUCKET_NAME)
+                .withPrefix("statistics/");
+
+        System.out.println("extracting the statistcs");
+
+        do {
+            listing = s3.listObjects(listObjectsRequest);
+            for (S3ObjectSummary objectSummary : listing.getObjectSummaries()) {
+                System.out.println(objectSummary.getKey());
+                stream = new S3Helper().getObject(objectSummary.getKey()).getObjectContent();
+                reader = new BufferedReader(new InputStreamReader(stream));
+                writer.write("worker " + i++ + "\n");
+                while((line = reader.readLine()) != null)
+                    writer.write(line + "\n");
+            }
+            listObjectsRequest.setMarker(listing.getNextMarker());
+        } while (listing.isTruncated());
+        System.out.println("\n");
+        writer.close();
     }
 }
