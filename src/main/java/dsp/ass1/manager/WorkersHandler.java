@@ -33,16 +33,19 @@ class WorkersHandler implements Runnable {
     }
 
     private void runMethod() {
-        int neededWorkers;
+        double neededWorkers;
         int createdWorkers;
         System.out.println("workers handler started");
 
         while (!ManagerMain.Auxiliary.terminate.get() || !allJobs.isEmpty()) {
 
             try {
-                neededWorkers =
-                        (sqs.getMsgCount(SQSHelper.Queues.PENDING_TWEETS) / ManagerMain.Auxiliary.ratio.get())
-                                - ec2.countInstancesOfType(Settings.INSTANCE_WORKER);
+                neededWorkers  = sqs.getMsgCount(SQSHelper.Queues.PENDING_TWEETS);
+                neededWorkers /= ManagerMain.Auxiliary.ratio.get();
+                neededWorkers -= ec2.countInstancesOfType(Settings.INSTANCE_WORKER);
+
+                neededWorkers = Math.ceil(neededWorkers);
+
             } catch (Exception e) {
                 System.out.println("error in workers handler");
                 e.printStackTrace();
@@ -53,8 +56,8 @@ class WorkersHandler implements Runnable {
             System.out.println("needed workers " + neededWorkers);
 
             if (neededWorkers > 0) {
-                System.out.println("Trying to create " + neededWorkers + " new workers");
-                createdWorkers = workerFactory.makeInstances(neededWorkers);
+                System.out.println("Trying to create " + (int)neededWorkers + " new workers");
+                createdWorkers = workerFactory.makeInstances((int)neededWorkers);
                 System.out.println("Created " + createdWorkers + " new workers");
                 ec2.sleep("WorkersHandler");
                 ec2.sleep("WorkersHandler");
