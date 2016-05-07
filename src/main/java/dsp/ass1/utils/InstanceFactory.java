@@ -12,7 +12,7 @@ import java.util.List;
  *
  */
 public class InstanceFactory {
-    final String GENERIC_IMAGE_AMI_ID   = "ami-80190eea";
+    final String GENERIC_IMAGE_AMI_ID   = "ami-e3ce2c8e";
     final String INSTANCE_TYPE          = "t2.micro";
     final String KEY_NAME               = "bansko";
     final String SECURITY_GROUP         = "launch-wizard-1";

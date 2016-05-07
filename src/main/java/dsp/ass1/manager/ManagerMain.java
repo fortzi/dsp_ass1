@@ -5,6 +5,7 @@ package dsp.ass1.manager;
  *
  */
 
+import dsp.ass1.utils.SQSHelper;
 import dsp.ass1.utils.Settings;
 
 import java.io.IOException;
@@ -39,9 +40,8 @@ public class ManagerMain {
         } catch (InterruptedException e) {
             System.err.println("Threads interrupted.");
             e.printStackTrace();
+            new SQSHelper().debug(e);
         }
-
-
 
         System.out.println("Terminating manager node");
     }

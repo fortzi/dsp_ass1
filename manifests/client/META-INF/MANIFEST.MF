@@ -1,0 +1,23 @@
+Manifest-Version: 1.0
+Class-Path: jollyday-0.4.7.jar ejml-0.23.jar stanford-corenlp-3.3.0-mo
+ dels.jar stanford-corenlp-3.3.0.jar aws-java-sdk-sqs-1.10.74.jar aws-
+ java-sdk-core-1.10.74.jar commons-logging-1.1.3.jar httpclient-4.3.6.
+ jar httpcore-4.3.3.jar commons-codec-1.6.jar jackson-databind-2.5.3.j
+ ar jackson-annotations-2.5.0.jar jackson-core-2.5.3.jar jackson-dataf
+ ormat-cbor-2.5.3.jar joda-time-2.8.1.jar httpcore-4.3.3.jar joda-time
+ -2.8.1.jar httpclient-4.3.6.jar commons-codec-1.6.jar jackson-core-2.
+ 5.3.jar commons-logging-1.1.3.jar jackson-databind-2.5.3.jar aws-java
+ -sdk-s3-1.10.74.jar aws-java-sdk-ec2-1.10.74.jar aws-java-sdk-kms-1.1
+ 0.74.jar aws-java-sdk-sqs-1.10.74.jar aws-java-sdk-core-1.10.74.jar j
+ ackson-annotations-2.5.0.jar jackson-dataformat-cbor-2.5.3.jar aws-ja
+ va-sdk-ec2-1.10.74.jar aws-java-sdk-core-1.10.74.jar commons-logging-
+ 1.1.3.jar httpclient-4.3.6.jar httpcore-4.3.3.jar commons-codec-1.6.j
+ ar jackson-databind-2.5.3.jar jackson-annotations-2.5.0.jar jackson-c
+ ore-2.5.3.jar jackson-dataformat-cbor-2.5.3.jar joda-time-2.8.1.jar j
+ soup-1.8.3.jar aws-java-sdk-s3-1.10.74.jar aws-java-sdk-kms-1.10.74.j
+ ar aws-java-sdk-core-1.10.74.jar commons-logging-1.1.3.jar httpclient
+ -4.3.6.jar httpcore-4.3.3.jar commons-codec-1.6.jar jackson-databind-
+ 2.5.3.jar jackson-annotations-2.5.0.jar jackson-core-2.5.3.jar jackso
+ n-dataformat-cbor-2.5.3.jar joda-time-2.8.1.jar
+Main-Class: dsp.ass1.client.ClientMain
+

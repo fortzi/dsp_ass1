@@ -17,9 +17,8 @@ import java.util.ArrayList;
 public class DeployMain {
 
     private static boolean clean = true;
-    private static boolean repackage = false;
+    private static boolean repackage = true;
     private static boolean statistics = false;
-
 
     public static void main(String[] args) {
 
