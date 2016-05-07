@@ -12,15 +12,15 @@ import java.util.List;
  *
  */
 public class InstanceFactory {
-    final String GENERIC_IMAGE_AMI_ID   = "ami-e3ce2c8e";
-    final String INSTANCE_TYPE          = "t2.micro";
-    final String KEY_NAME               = "bansko";
-    final String SECURITY_GROUP         = "launch-wizard-1";
-    final String PACKAGE_FILE_NAME      = "package.zip";
-    final String S3_ADDRESS             = "https://s3.amazonaws.com/dsp-ass1/" + PACKAGE_FILE_NAME;
+    private final String GENERIC_IMAGE_AMI_ID   = "ami-e3ce2c8e";
+    private final String INSTANCE_TYPE          = "t2.micro";
+    private final String KEY_NAME               = "bansko";
+    private final String SECURITY_GROUP         = "launch-wizard-1";
+    private final String PACKAGE_FILE_NAME      = "package.zip";
+    private final String S3_ADDRESS             = "https://s3.amazonaws.com/dsp-ass1/" + PACKAGE_FILE_NAME;
 
-    static int runningInstances = 0;
-    String jarFileName = null;
+    private static int runningInstances = 0;
+    private String jarFileName = null;
 
     public InstanceFactory(String jarFileName) {
         this.jarFileName = jarFileName;
